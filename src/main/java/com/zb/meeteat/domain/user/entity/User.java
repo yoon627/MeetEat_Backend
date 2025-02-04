@@ -38,7 +38,7 @@ public class User extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private SignupType signupType; // 가입 유형 (EMAIL / KAKAO / NAVER)
+    private SignUpType signupType; // 가입 유형 (EMAIL / KAKAO / NAVER)
 
     private Integer matchingCount = 0; // 매칭 횟수 (기본값 0)
 
@@ -51,7 +51,7 @@ public class User extends BaseEntity {
 
     @Builder
     public User(String email, String password, String nickname, String introduce,
-                Role role, SignupType signupType, Integer matchingCount,
+                Role role, SignUpType signupType, Integer matchingCount,
                 Boolean isPenalty, LocalDateTime bannedAt) {
         this.email = email;
         this.password = password;
