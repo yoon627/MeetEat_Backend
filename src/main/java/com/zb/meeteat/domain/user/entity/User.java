@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
         @UniqueConstraint(columnNames = "email"),
         @UniqueConstraint(columnNames = "nickname")
 })
-public class User extends BaseEntity {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,34 +46,61 @@ public class User extends BaseEntity {
 
     private LocalDateTime bannedAt; // 계정 정지 날짜
 
-    private LocalDateTime createAt; // 계정 생성일
-    private LocalDateTime updateAt; // 계정 수정일
+    private LocalDateTime bannedEndAt; // 계정 정지 해제 날짜
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
 
     @Builder
     public User(String email, String password, String nickname, String introduce,
-                Role role, SignUpType signupType, Integer matchingCount,
-                Boolean isPenalty, LocalDateTime bannedAt) {
+                Role role, SignUpType signupType) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.introduce = introduce;
         this.role = role;
         this.signupType = signupType;
-        this.matchingCount = matchingCount;
-        this.isPenalty = isPenalty;
-        this.bannedAt = bannedAt;
     }
 
     // 비밀번호 업데이트 메서드
     public void updatePassword(String newPassword) {
         this.password = newPassword;
-        this.updateAt = LocalDateTime.now();
     }
 
     // 닉네임 변경 메서드
     public void updateNickname(String newNickname) {
         this.nickname = newNickname;
-        this.updateAt = LocalDateTime.now();
+    }
+
+    // 매칭 횟수 업데이트 메서드
+    public void updateMatchingCount(int count) {
+        this.matchingCount = count;
+    }
+
+    // 패널티 여부 변경 메서드
+    public void updatePenaltyStatus(boolean isPenalty) {
+        this.isPenalty = isPenalty;
+    }
+
+    // 패널티 시작 및 종료 시간 설정 메서드
+    public void setPenalTyPeriod(LocalDateTime bannedAt, LocalDateTime bannedEndAt) {
+        this.bannedAt = bannedAt;
+        this.bannedEndAt = bannedEndAt;
     }
 
 
