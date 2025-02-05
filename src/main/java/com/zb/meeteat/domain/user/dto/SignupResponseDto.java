@@ -5,10 +5,12 @@ import lombok.Getter;
 
 @Getter
 public class SignupResponseDto {
-    private String message;
+    private String email;
+    private String nickname;
 
     @Builder
-    public SignupResponseDto(String message) {
-        this.message = message;
+    public SignupResponseDto(String email, String nickname) {
+        this.email = email;
+        this.nickname = nickname;
     }
 }
