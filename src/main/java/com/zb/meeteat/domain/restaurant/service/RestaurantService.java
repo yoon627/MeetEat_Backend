@@ -3,6 +3,8 @@ package com.zb.meeteat.domain.restaurant.service;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantRepository;
+import com.zb.meeteat.exception.CustomException;
+import com.zb.meeteat.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,4 +45,11 @@ public class RestaurantService {
           pageable);
     }
   }
+
+  // 식당 상세 조회
+  public Restaurant getRestaurant(Long restaurantId) {
+    return restaurantRepository.findById(restaurantId)
+        .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
+  }
+
 }
