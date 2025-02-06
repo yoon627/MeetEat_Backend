@@ -66,4 +66,13 @@ public class RestaurantController {
     RestaurantReview review = restaurantService.createReview(userId, req);
     return ResponseEntity.ok().build();
   }
+
+  // 나의 식당 후기 조회
+  @GetMapping("/myreview")
+  public ResponseEntity<RestaurantReview> getMyReview(
+      @RequestParam(value = "matchingHistoryId", required = true) String matchingHistoryId
+  ) {
+
+    return ResponseEntity.ok(restaurantService.getMyReviewByMatching(Long.parseLong(matchingHistoryId)));
+  }
 }

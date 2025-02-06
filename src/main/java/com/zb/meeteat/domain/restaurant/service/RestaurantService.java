@@ -137,6 +137,20 @@ public class RestaurantService {
     return restaurantReviewRepository.save(review);
   }
 
+  // 작성된 매칭-나의후기 보기
+  public RestaurantReview getMyReviewByMatching(Long matchingHistoryId) {
+    MatchingHistory history = matchingHistoryRepository.findById(matchingHistoryId)
+        .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
+
+    Matching matching = history.getMatching();
+    if (history.getStatus().equals(MatchingStatus.CANCELED) ||
+        matching.getStatus().equals(MatchingStatus.CANCELED)) {
+      throw new CustomException(ErrorCode.CANCELED_MATCHING);
+    }
+
+    return restaurantReviewRepository.findRestaurantReviewByMatchingHistoryId(matchingHistoryId);
+  }
+
   // 파일 확장자 확인
   private void validateFileExtension(MultipartFile file) {
     List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png");

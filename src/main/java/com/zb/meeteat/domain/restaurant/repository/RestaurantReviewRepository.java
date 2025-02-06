@@ -14,4 +14,6 @@ public interface RestaurantReviewRepository extends JpaRepository<RestaurantRevi
       + "WHERE r.restaurant.id = :restaurantId")
   Page<RestaurantReview> findRestaurantReviewByRestaurantId(
       @Param("restaurantId") Long restaurantId, Pageable pageable);
+
+  RestaurantReview findRestaurantReviewByMatchingHistoryId(Long matchingHistoryId);
 }
