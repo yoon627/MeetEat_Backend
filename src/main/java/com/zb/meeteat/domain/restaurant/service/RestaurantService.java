@@ -1,17 +1,28 @@
 package com.zb.meeteat.domain.restaurant.service;
 
+import com.zb.meeteat.domain.matching.entity.Matching;
+import com.zb.meeteat.domain.matching.entity.MatchingHistory;
+import com.zb.meeteat.domain.matching.entity.MatchingStatus;
+import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
+import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequset;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantRepository;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantReviewRepository;
+import com.zb.meeteat.domain.user.entity.User;
+import com.zb.meeteat.domain.user.repository.UserRepository;
 import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.exception.ErrorCode;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +30,8 @@ public class RestaurantService {
 
   private final RestaurantRepository restaurantRepository;
   private final RestaurantReviewRepository restaurantReviewRepository;
+  private final UserRepository userRepository;
+  private final MatchingHistoryRepository matchingHistoryRepository;
 
   public Page<Restaurant> getRestaurantList(SearchRequest search) {
 
@@ -63,5 +76,75 @@ public class RestaurantService {
     Pageable pageable = PageRequest.of(page - 1, size);
 
     return restaurantReviewRepository.findRestaurantReviewByRestaurantId(restaurantId, pageable);
+  }
+
+  // 후기 작성하기
+  public RestaurantReview createReview(Long userId, CreateReviewRequset req) throws CustomException {
+
+    // 1. user 확인
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
+
+    // 2. 매칭 참석 여부 확인
+    MatchingHistory history = matchingHistoryRepository.findById(req.getMatchingHistoryId())
+        .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
+
+    Matching matching = history.getMatching();
+    if (matching.getStatus().equals(MatchingStatus.CANCELED)
+        || history.getStatus().equals(MatchingStatus.CANCELED)) {
+      throw new CustomException(ErrorCode.REVIEW_NOT_ALLOWED_FOR_CANCELED_MATCHING);
+    }
+
+    // 3. 후기 작성 시간 확인 (매칭 약속시간 이후 2시간)
+    LocalDateTime matchingTime = matching.getCreatedAt();
+    LocalDateTime currentTime = LocalDateTime.now();
+    Duration duration = Duration.between(matchingTime, currentTime);
+    if (duration.toHours() < 2) {
+      throw new CustomException(ErrorCode.REVIEW_TIME_NOT_EXCEEDED);
+    }
+
+    Restaurant restaurant = matching.getRestaurant();
+    if (restaurant == null) {
+      throw new CustomException(ErrorCode.NOT_EXIST_RESTAURANT);
+    }
+
+    // 4. 첨부파일 확인
+    int MAX_FILE_COUNT = 5;
+    String imageUrls = null; // 이미지 urls
+
+    MultipartFile multipartFile = req.getFile();
+    if (multipartFile.isEmpty() && multipartFile.getSize() > MAX_FILE_COUNT) {
+      throw new CustomException(ErrorCode.FILE_UPLOAD_LIMIT_EXCEEDED);
+    } else {
+      // todo 이미지 저장하기
+      if (multipartFile.getSize() > 0) {
+
+        // 파일 확장자 확인
+        validateFileExtension(multipartFile);
+        // AWS image Upload => imageUrls = [imageUrl]
+      }
+    }
+
+    RestaurantReview review = RestaurantReview.builder()
+        .rating(req.getRating())
+        .description(req.getDescription())
+        .imgUrl(imageUrls)
+        .matchingHistoryId(history.getId())
+        .user(user)
+        .restaurant(restaurant)
+        .build();
+
+    return restaurantReviewRepository.save(review);
+  }
+
+  // 파일 확장자 확인
+  private void validateFileExtension(MultipartFile file) {
+    List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png");
+
+    String fileName = file.getOriginalFilename();
+    String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.contains(extension)) {
+      throw new CustomException(ErrorCode.INVALID_FILE_FORMAT);
+    }
   }
 }

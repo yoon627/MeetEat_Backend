@@ -1,15 +1,18 @@
 package com.zb.meeteat.domain.restaurant.controller;
 
+import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequset;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.service.RestaurantService;
+import com.zb.meeteat.exception.CustomException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -53,5 +56,14 @@ public class RestaurantController {
 
     return ResponseEntity.ok(
         restaurantService.getRestaurantReviews(restaurantId, page, size));
+  }
+
+  // 식당 후기 작성
+  @PostMapping("/review")
+  public ResponseEntity createReview (
+      @ModelAttribute @Valid CreateReviewRequset req) throws CustomException {
+    long userId = req.getUserId();
+    RestaurantReview review = restaurantService.createReview(userId, req);
+    return ResponseEntity.ok().build();
   }
 }
