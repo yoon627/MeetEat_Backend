@@ -2,7 +2,9 @@ package com.zb.meeteat.domain.restaurant.service;
 
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.entity.Restaurant;
+import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantRepository;
+import com.zb.meeteat.domain.restaurant.repository.RestaurantReviewRepository;
 import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class RestaurantService {
 
   private final RestaurantRepository restaurantRepository;
+  private final RestaurantReviewRepository restaurantReviewRepository;
 
   public Page<Restaurant> getRestaurantList(SearchRequest search) {
 
@@ -52,4 +55,13 @@ public class RestaurantService {
         .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
   }
 
+  // 식당 리뷰 조회
+  public Page<RestaurantReview> getRestaurantReviews(
+      Long restaurantId, int page, int size) {
+
+    // Pageable 객체 생성 (페이지, 사이즈, 정렬 방식)
+    Pageable pageable = PageRequest.of(page - 1, size);
+
+    return restaurantReviewRepository.findRestaurantReviewByRestaurantId(restaurantId, pageable);
+  }
 }
