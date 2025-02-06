@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Match Notification</title>
+</head>
+<body>
+<h1>Matching System</h1>
+<label for="userIdInput">Enter User ID:</label>
+<input id="userIdInput" placeholder="Enter your ID" type="number"/>
+<button onclick="startMatching()">Start Matching</button>
+
+<p>User ID: <span id="userIdDisplay">Not Set</span></p>
+<p id="matchMessage"></p>
+<script>
+  let eventSource;
+
+  function startMatching() {
+    subscribe()
+    .then(() => {
+      console.log("✅ SSE 연결 성공! 매칭 요청 실행");
+      return requestMatching(); // SSE 연결 성공 후 매칭 요청 실행
+    })
+    .catch(error => console.error("❌ SSE 연결 실패:", error));
+  }
+
+  function subscribe() {
+    return new Promise((resolve, reject) => {
+      const userId = document.getElementById("userIdInput").value;
+      if (!userId) {
+        alert("User ID is required!");
+        reject("User ID is missing");
+        return;
+      }
+
+      eventSource = new EventSource(`/matching/subscribe`);
+
+      eventSource.onopen = function () {
+        console.log("✅ SSE connection opened.");
+        resolve(); // SSE 연결 성공 시 resolve 호출
+      };
+
+      eventSource.onerror = function (error) {
+        console.error("❌ SSE error:", error);
+        eventSource.close();
+        reject(error); // SSE 연결 실패 시 reject 호출
+      };
+
+      eventSource.addEventListener("match", (event) => {
+        document.getElementById("matchMessage").innerText = event.data;
+        alert(event.data);
+      });
+    });
+  }
+
+  function requestMatching() {
+
+    const userId = document.getElementById("userIdInput").value;
+
+    fetch(`/matching/request`, {
+      method: "POST",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(
+          {
+            userId: 1,
+            groupSize: 2,
+            restaurantDto: {
+              name: "식당이름",
+              categoryName: "중식"
+            }
+          }
+      )
+    })
+    .catch(error => console.error("Error requesting match:", error));
+  }
+
+</script>
+</body>
+</html>
