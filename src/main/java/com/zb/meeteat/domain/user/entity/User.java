@@ -1,16 +1,16 @@
 package com.zb.meeteat.domain.user.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-
 @Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
+@Builder
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email"),
         @UniqueConstraint(columnNames = "nickname")
@@ -40,8 +40,10 @@ public class User {
     @Column(nullable = false)
     private SignUpType signupType; // 가입 유형 (EMAIL / KAKAO / NAVER)
 
+    @Builder.Default
     private Integer matchingCount = 0; // 매칭 횟수 (기본값 0)
 
+    @Builder.Default
     private Boolean isPenalty = false; // 패널티 여부 (기본값 false)
 
     private LocalDateTime bannedAt; // 계정 정지 날짜
@@ -65,44 +67,5 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
-
-    @Builder
-    public User(String email, String password, String nickname, String introduce,
-                Role role, SignUpType signupType) {
-        this.email = email;
-        this.password = password;
-        this.nickname = nickname;
-        this.introduce = introduce;
-        this.role = role;
-        this.signupType = signupType;
-    }
-
-    // 비밀번호 업데이트 메서드
-    public void updatePassword(String newPassword) {
-        this.password = newPassword;
-    }
-
-    // 닉네임 변경 메서드
-    public void updateNickname(String newNickname) {
-        this.nickname = newNickname;
-    }
-
-    // 매칭 횟수 업데이트 메서드
-    public void updateMatchingCount(int count) {
-        this.matchingCount = count;
-    }
-
-    // 패널티 여부 변경 메서드
-    public void updatePenaltyStatus(boolean isPenalty) {
-        this.isPenalty = isPenalty;
-    }
-
-    // 패널티 시작 및 종료 시간 설정 메서드
-    public void setPenalTyPeriod(LocalDateTime bannedAt, LocalDateTime bannedEndAt) {
-        this.bannedAt = bannedAt;
-        this.bannedEndAt = bannedEndAt;
-    }
-
-
-
 }
+
