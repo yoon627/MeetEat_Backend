@@ -1,11 +1,10 @@
 package com.zb.meeteat.domain.user.controller;
 
-import com.zb.meeteat.domain.user.dto.ApiResponse;
 import com.zb.meeteat.domain.user.dto.SignupRequestDto;
-import com.zb.meeteat.domain.user.dto.SignupResponseDto;
 import com.zb.meeteat.domain.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +18,10 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
-    public ApiResponse<SignupResponseDto> signup(@Valid @RequestBody SignupRequestDto requestDto) {
-        return userService.signup(requestDto);
+    public ResponseEntity<String> signup(@Valid @RequestBody SignupRequestDto requestDto) {
+        userService.signup(requestDto);
+        return ResponseEntity.ok("회원가입 성공");
     }
+
+
 }
