@@ -1,10 +1,15 @@
 package com.zb.meeteat.domain.user.service;
 
+import com.zb.meeteat.domain.user.dto.SigninRequestDto;
+import com.zb.meeteat.domain.user.dto.SigninResponseDto;
 import com.zb.meeteat.domain.user.dto.SignupRequestDto;
 import com.zb.meeteat.domain.user.entity.Role;
 import com.zb.meeteat.domain.user.entity.SignUpType;
 import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
+import com.zb.meeteat.exception.CustomException;
+import com.zb.meeteat.exception.ErrorCode;
+import com.zb.meeteat.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -12,12 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-@Transactional
-public class UserService {
+public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
+    @Transactional
     public User signup(SignupRequestDto requestDto) {
         validateDuplicateUser(requestDto.getEmail(), requestDto.getNickname());
 
@@ -42,6 +48,31 @@ public class UserService {
             throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
         }
     }
+
+    public SigninResponseDto signin(SigninRequestDto request) {
+        // 1. 이메일로 사용자 찾기
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // 2. 탈퇴 예정 계정인지 확인 (`isPenalty`가 true면 탈퇴 예정 상태)
+        if (user.getIsPenalty()) {
+            throw new CustomException(ErrorCode.USER_SCHEDULED_FOR_DELETION);
+        }
+
+        // 3. 비밀번호 검증
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
+        }
+
+        // 4. JWT 토큰 생성
+        String accessToken = jwtUtil.generateToken(user);
+
+        // 5. 프로필 업데이트 필요 여부 확인 (닉네임이 없거나 비어있는 경우 true)
+        boolean needProfileUpdate = (user.getNickname() == null || user.getNickname().isBlank());
+
+        return new SigninResponseDto(accessToken, needProfileUpdate);
+    }
+
 
 }
 
