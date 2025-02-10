@@ -31,5 +31,4 @@ public class Restaurant {
   private String category_name;
   private String category_group_name;
   private double rating;
-
 }

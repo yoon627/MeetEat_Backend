@@ -32,20 +32,20 @@ public class RestaurantReview {
   private Long id;
 
   @Column(nullable = false)
-  private int rating;  // 평점
+  private int rating;
 
   @Column(nullable = false, columnDefinition = "TEXT")
-  private String description; // 후기
+  private String description;
 
-  private String imgUrl;  // 후기 이미지
-
-  @Column(nullable = false)
-  private Long matchingHistoryId;  // matchingId
+  private String imgUrl;
 
   @Column(nullable = false)
-  private LocalDateTime createdAt;  // 생성날짜
+  private Long matchingHistoryId;
 
-  private LocalDateTime updatedAt;  // 업데이트날짜
+  @Column(nullable = false)
+  private LocalDateTime createdAt;
+
+  private LocalDateTime updatedAt;
 
   @ManyToOne
   @JoinColumn(name = "user_id")

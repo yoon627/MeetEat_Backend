@@ -4,7 +4,7 @@ import com.zb.meeteat.domain.matching.entity.Matching;
 import com.zb.meeteat.domain.matching.entity.MatchingHistory;
 import com.zb.meeteat.domain.matching.entity.MatchingStatus;
 import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
-import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequset;
+import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequest;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
@@ -32,14 +32,22 @@ public class RestaurantService {
   private final RestaurantReviewRepository restaurantReviewRepository;
   private final UserRepository userRepository;
   private final MatchingHistoryRepository matchingHistoryRepository;
+  private static int MAX_FILE_COUNT = 7;
 
   public Page<Restaurant> getRestaurantList(SearchRequest search) {
+
+    String categoryName = search.getCategoryName().equals("전체") ? "" : search.getCategoryName();
+    search.setCategoryName(categoryName);
 
     // Pageable 객체 생성 (페이지, 사이즈, 정렬 방식)
     Pageable pageable = PageRequest.of(search.getPage() - 1, search.getSize());
 
     // 정렬 기준에 따라 쿼리 메소드 실행
     if ("RATING".equals(search.getSorted())) {
+      if (Double.isNaN(search.getUserX()) || Double.isNaN(search.getUserX())) {
+        throw new CustomException(ErrorCode.BAD_REQUEST);
+      }
+
       return restaurantRepository.findRestaurantByRegionAndPlaceNameAndCategoryNameOrderByRatingDesc(
           search.getRegion(),
           search.getPlaceName(),
@@ -62,13 +70,11 @@ public class RestaurantService {
     }
   }
 
-  // 식당 상세 조회
   public Restaurant getRestaurant(Long restaurantId) {
     return restaurantRepository.findById(restaurantId)
         .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
   }
 
-  // 식당 리뷰 조회
   public Page<RestaurantReview> getRestaurantReviews(
       Long restaurantId, int page, int size) {
 
@@ -78,8 +84,7 @@ public class RestaurantService {
     return restaurantReviewRepository.findRestaurantReviewByRestaurantId(restaurantId, pageable);
   }
 
-  // 후기 작성하기
-  public RestaurantReview createReview(Long userId, CreateReviewRequset req) throws CustomException {
+  public RestaurantReview createReview(Long userId, CreateReviewRequest req) throws CustomException {
 
     // 1. user 확인
     User user = userRepository.findById(userId)
@@ -109,22 +114,9 @@ public class RestaurantService {
     }
 
     // 4. 첨부파일 확인
-    int MAX_FILE_COUNT = 5;
-    String imageUrls = null; // 이미지 urls
+    String imageUrls = saveImage(req.getFile());
 
-    MultipartFile multipartFile = req.getFile();
-    if (multipartFile.isEmpty() && multipartFile.getSize() > MAX_FILE_COUNT) {
-      throw new CustomException(ErrorCode.FILE_UPLOAD_LIMIT_EXCEEDED);
-    } else {
-      // todo 이미지 저장하기
-      if (multipartFile.getSize() > 0) {
-
-        // 파일 확장자 확인
-        validateFileExtension(multipartFile);
-        // AWS image Upload => imageUrls = [imageUrl]
-      }
-    }
-
+    // 5. 데이터 저장하기
     RestaurantReview review = RestaurantReview.builder()
         .rating(req.getRating())
         .description(req.getDescription())
@@ -137,7 +129,6 @@ public class RestaurantService {
     return restaurantReviewRepository.save(review);
   }
 
-  // 작성된 매칭-나의후기 보기
   public RestaurantReview getMyReviewByMatching(Long matchingHistoryId) {
     MatchingHistory history = matchingHistoryRepository.findById(matchingHistoryId)
         .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
@@ -151,9 +142,25 @@ public class RestaurantService {
     return restaurantReviewRepository.findRestaurantReviewByMatchingHistoryId(matchingHistoryId);
   }
 
-  // 파일 확장자 확인
+  private String saveImage(MultipartFile file) {
+    if (file.isEmpty() && file.getSize() > MAX_FILE_COUNT) {
+      return null;
+    }
+
+    // todo 이미지 저장하기
+    String imagesUrl = null;
+      if (file.getSize() > 0) {
+
+        // 파일 확장자 확인
+        validateFileExtension(file);
+        // AWS image Upload => imageUrls = [imageUrl]
+      }
+
+    return imagesUrl;
+  }
+
   private void validateFileExtension(MultipartFile file) {
-    List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png");
+    List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "raw", "heic", "heif");
 
     String fileName = file.getOriginalFilename();
     String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
