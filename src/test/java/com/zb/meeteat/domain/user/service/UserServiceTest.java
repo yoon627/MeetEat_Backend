@@ -27,7 +27,7 @@ class UserServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private UserService userService;
+    private AuthService userService;
 
     @BeforeEach
     void setUp() {
