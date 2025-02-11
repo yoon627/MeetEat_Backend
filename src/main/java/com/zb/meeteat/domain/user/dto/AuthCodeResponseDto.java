@@ -5,7 +5,8 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class SigninResponseDto {
+public class AuthCodeResponseDto {
     private String accessToken;
     private boolean needProfileUpdate;
+
 }
