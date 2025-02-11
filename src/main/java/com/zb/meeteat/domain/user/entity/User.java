@@ -1,9 +1,12 @@
 package com.zb.meeteat.domain.user.entity;
 
+import com.zb.meeteat.external.kakao.KakaoUserResponse;
+import com.zb.meeteat.external.naver.NaverUserResponse;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -66,6 +69,57 @@ public class User {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    public boolean isProfileIncomplete() {
+        return this.nickname == null || this.nickname.isEmpty()
+                || this.introduce == null || this.introduce.isEmpty();
+    }
+
+
+    public static User ofKakao(KakaoUserResponse response) {
+        String email = response.getKakaoAccount().getEmail();
+        String nickname = response.getKakaoAccount().getNickname();
+
+        // 이메일이 없을 경우 임시 이메일 설정
+        if (email == null || email.isEmpty()) {
+            email = "kakao_" + UUID.randomUUID().toString().substring(0, 8) + "@temp.com";
+        }
+
+        // 닉네임이 없을 경우 기본 닉네임 설정
+        if (nickname == null || nickname.isEmpty()) {
+            nickname = "카카오사용자_" + UUID.randomUUID().toString().substring(0, 6);
+        }
+
+        return User.builder()
+                .email(email)
+                .nickname(nickname)
+                .password(UUID.randomUUID().toString())  // 랜덤 더미 비밀번호 설정
+                .signupType(SignUpType.KAKAO)
+                .role(Role.USER)
+                .build();
+    }
+
+    public static User ofNaver(NaverUserResponse response) {
+        String email = response.getResponse().getEmail();
+        String nickname = response.getResponse().getNickname();
+
+        if (email == null || email.isEmpty()) {
+            email = "naver_" + UUID.randomUUID().toString().substring(0, 8) + "@temp.com";
+        }
+
+        if (nickname == null || nickname.isEmpty()) {
+            nickname = "네이버사용자_" + UUID.randomUUID().toString().substring(0, 6);
+        }
+
+        return User.builder()
+                .email(email)
+                .nickname(nickname)
+                .password(UUID.randomUUID().toString())
+                .signupType(SignUpType.NAVER)
+                .role(Role.USER)
+                .build();
+    }
+
 
 }
 
