@@ -14,11 +14,11 @@ import java.util.Date;
 public class JwtUtil {
 
     private final SecretKey key;
-    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // ✅ 24시간 유지
+    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24시간 유지
 
     public JwtUtil(@Value("${spring.jwt.secret}") String secretKey) {
         try {
-            // ✅ Base64 디코딩 시도 (getBytes 제거)
+            // Base64 디코딩 시도 (getBytes 제거)
             byte[] decodedKey = Base64.getDecoder().decode(secretKey);
             this.key = Keys.hmacShaKeyFor(decodedKey);
         } catch (IllegalArgumentException e) {
