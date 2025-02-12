@@ -3,6 +3,7 @@ package com.zb.meeteat.domain.matching.service;
 import com.zb.meeteat.domain.matching.dto.JoinRequestDto;
 import com.zb.meeteat.domain.matching.dto.MatchingDto;
 import com.zb.meeteat.domain.matching.dto.MatchingRequestDto;
+import com.zb.meeteat.domain.matching.dto.TeamResponseDto;
 import com.zb.meeteat.domain.matching.dto.TempTeamResponseDto;
 import com.zb.meeteat.domain.matching.repository.MatchingRepository;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantDto;
@@ -38,8 +39,7 @@ public class MatchingService {
   private final RedisTemplate<String, MatchingRequestDto> redisTemplate;
   private final RedisTemplate<String, String> redisTeamTemplate;
   private final Map<Long, SseEmitter> sseEmitterMap = new ConcurrentHashMap<>();
-  // 계산되고 있다가 취소하는 유저가 발생하는 경우를 고려하기 위한 Set
-  private final Set<Long> cancelledUserSet = ConcurrentHashMap.newKeySet();
+  private final Set<Long> cancelledUserSet = ConcurrentHashMap.newKeySet();//취소한 유저가 계산되고 있는 경우를 체크하기 위해
   private final PriorityQueue<Integer> teamIdPq = new PriorityQueue<>();
   private final Map<String, List<MatchingRequestDto>> tempTeamMap = new ConcurrentHashMap<>();
 
@@ -88,7 +88,7 @@ public class MatchingService {
   }
 
   @Scheduled(fixedDelay = 1000) // 1초마다 실행
-  public void makeTeam() {
+  public void makeTempTeam() {
     while (redisTemplate.hasKey(MATCHING_QUEUE)
         && redisTemplate.opsForList().size(MATCHING_QUEUE) > 1) {
       MatchingRequestDto user = redisTemplate.opsForList().leftPop(MATCHING_QUEUE);
@@ -103,7 +103,7 @@ public class MatchingService {
           cancelledUserSet.remove(candidate.getUserId());
           continue;
         }
-        if (checkTeam(team, candidate)) {
+        if (checkTeamCondition(team, candidate)) {
           team.add(candidate);
         } else {
           redisTemplate.opsForList().rightPush(MATCHING_QUEUE, candidate);
@@ -129,7 +129,7 @@ public class MatchingService {
         redisTeamTemplate.opsForHash().put(teamName, GROUP_SIZE, String.valueOf(team.size()));
         redisTeamTemplate.expire(teamName, RESPONSE_WAIT_TIME, TimeUnit.SECONDS);
         tempTeamMap.put(teamName, team);
-        notifyTeam(team, teamId);
+        notifyTempTeam(team, teamId);
       } else {
         for (MatchingRequestDto member : team) {
           redisTemplate.opsForList().rightPush(MATCHING_QUEUE, member);
@@ -139,7 +139,7 @@ public class MatchingService {
   }
 
   //매칭 수락/거절
-  public void responseMatching(JoinRequestDto joinRequestDto) {
+  public void joinTempTeam(JoinRequestDto joinRequestDto) {
     long userId = 1L;
     String teamName = "team" + joinRequestDto.getTeamId();
     if (redisTeamTemplate.hasKey(teamName)) {
@@ -148,7 +148,7 @@ public class MatchingService {
             (String) redisTeamTemplate.opsForHash().get(teamName, AGREE_COUNT)) + 1;
         if (count == Integer.parseInt(
             (String) redisTeamTemplate.opsForHash().get(teamName, GROUP_SIZE))) {
-          completeMatching(tempTeamMap.get(teamName));
+          makeTeam(tempTeamMap.get(teamName));
           redisTeamTemplate.delete(teamName);
           return;
         }
@@ -162,24 +162,46 @@ public class MatchingService {
   }
 
   //완성된 팀을 모임으로 생성
-  public void completeMatching(List<MatchingRequestDto> team) {
+  public void makeTeam(List<MatchingRequestDto> team) {
     //TODO 식당 선정 로직
     RestaurantDto restaurantDto = team.getFirst().getRestaurantDto();
     //TODO 식당 저장 로직
     //TODO matchingDto에 식당추가
     MatchingDto matchingDto = MatchingDto.builder().count(team.size())
         .status(MatchingStatus.MATCHED).build();
-    saveMatching(matchingDto);
+    saveTeam(matchingDto);
     //TODO 사람들에게 알림
+    notifyTeam(team);
     //TODO 매칭내역 저장
   }
 
-  public void saveMatching(MatchingDto matchingDto) {
+  public void saveTeam(MatchingDto matchingDto) {
     matchingRepository.save(MatchingDto.toEntity(matchingDto));
   }
 
+  private void notifyTeam(List<MatchingRequestDto> team) {
+    TeamResponseDto teamResponseDto = new TeamResponseDto();
+    for (MatchingRequestDto matchingRequestDto : team) {
+      sendTeamEvent(matchingRequestDto.getUserId(), teamResponseDto);
+    }
+  }
+
+  private void sendTeamEvent(long userId, TeamResponseDto teamResponseDto) {
+    SseEmitter emitter = sseEmitterMap.get(userId);
+    if (emitter == null) {
+      try {
+        emitter.send(SseEmitter.event().name("match").data(teamResponseDto));
+        emitter.complete();
+        sseEmitterMap.remove(userId);
+      } catch (IOException e) {
+        emitter.complete();
+        sseEmitterMap.remove(userId);
+      }
+    }
+  }
+
   //임시 생성된 팀을 사람들에게 알림
-  private void notifyTeam(List<MatchingRequestDto> team, int teamId) {
+  private void notifyTempTeam(List<MatchingRequestDto> team, int teamId) {
     TempTeamResponseDto responseDto = new TempTeamResponseDto();
     responseDto.setTeamId(teamId);
     responseDto.setMessage("임시 모임이 생성되었습니다.");
@@ -187,12 +209,11 @@ public class MatchingService {
       responseDto.getRestaurantList().add(member.getRestaurantDto());
     }
     for (MatchingRequestDto m : team) {
-      sendTeamEvent(m.getUserId(), responseDto);
+      sendTempTeamEvent(m.getUserId(), responseDto);
     }
   }
 
-  //임시팀 사람들에게 알림을 보냄
-  private void sendTeamEvent(Long userId, TempTeamResponseDto tempTeamResponseDto) {
+  private void sendTempTeamEvent(Long userId, TempTeamResponseDto tempTeamResponseDto) {
     SseEmitter emitter = sseEmitterMap.get(userId);
     if (emitter != null) {
       try {
@@ -204,9 +225,7 @@ public class MatchingService {
     }
   }
 
-
-  //팀내 사람들과 조건이 맞는지 확인
-  private boolean checkTeam(List<MatchingRequestDto> team, MatchingRequestDto member) {
+  private boolean checkTeamCondition(List<MatchingRequestDto> team, MatchingRequestDto member) {
     for (MatchingRequestDto m : team) {
       if (!checkCondition(m, member)) {
         return false;
@@ -215,16 +234,14 @@ public class MatchingService {
     return true;
   }
 
-  //사람끼리 조건이 맞는지 확인
   private boolean checkCondition(MatchingRequestDto member1, MatchingRequestDto member2) {
     if (member1.getGroupSize() != member2.getGroupSize()) {
       return false;
     }
-    return distanceCheck(member1, member2);
+    return checkDistanceCondition(member1, member2);
   }
 
-  //거리가 맞는지 확인
-  private boolean distanceCheck(MatchingRequestDto member1, MatchingRequestDto member2) {
+  private boolean checkDistanceCondition(MatchingRequestDto member1, MatchingRequestDto member2) {
     if (calculateDistance(member1.getUserLat(), member1.getUserLon(),
         member2.getRestaurantDto().getLat(), member2.getRestaurantDto().getLon()) > 2) {
       return false;
@@ -236,7 +253,6 @@ public class MatchingService {
     return true;
   }
 
-  //두 지점사이 거리를 계산
   private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     double dLat = Math.toRadians(lat2 - lat1);
     double dLon = Math.toRadians(lon2 - lon1);

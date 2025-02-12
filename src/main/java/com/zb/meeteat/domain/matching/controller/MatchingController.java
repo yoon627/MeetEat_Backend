@@ -20,8 +20,8 @@ public class MatchingController {
   private final MatchingService matchingService;
 
   @PostMapping
-  public void responseMatching(@RequestBody JoinRequestDto joinRequestDto) {
-    matchingService.responseMatching(joinRequestDto);
+  public void joinTempTeam(@RequestBody JoinRequestDto joinRequestDto) {
+    matchingService.joinTempTeam(joinRequestDto);
   }
 
   @GetMapping("/subscribe")
