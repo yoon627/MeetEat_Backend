@@ -71,7 +71,6 @@ public class MatchingService {
 
   // 매칭 요청
   public void requestMatching(MatchingRequestDto matchingRequestDto) {
-    //TODO 10분만 매칭하는 로직추가
     //TODO 임시로 userId를 정해놓음
     long userId = 1L;
     matchingRequestDto.setUserId(userId);
