@@ -11,8 +11,8 @@ import lombok.Setter;
 @Builder
 public class JoinRequestDto {
 
-  int teamId;
-  long userId;
-  boolean join;
+  private int teamId;
+  private long userId;
+  private Boolean isJoin;
 
 }

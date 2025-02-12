@@ -15,7 +15,7 @@ import lombok.Setter;
 @Builder
 public class TempTeamResponseDto {
 
-  int teamId;
-  String message;
-  List<RestaurantDto> restaurantList;
+  private int teamId;
+  private String message;
+  private List<RestaurantDto> restaurantList;
 }

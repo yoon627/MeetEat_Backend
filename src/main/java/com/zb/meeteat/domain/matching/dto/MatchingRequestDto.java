@@ -13,10 +13,10 @@ import lombok.Setter;
 @Builder
 public class MatchingRequestDto {
 
-  long userId;
-  double userLon;
-  double userLat;
-  int groupSize;
-  LocalDateTime matchingStartTime;
-  RestaurantDto restaurantDto;
+  private long userId;
+  private double userLon;
+  private double userLat;
+  private int groupSize;
+  private LocalDateTime matchingStartTime;
+  private RestaurantDto restaurantDto;
 }

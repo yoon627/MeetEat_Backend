@@ -13,8 +13,8 @@ import lombok.Setter;
 @Builder
 public class TeamResponseDto {
 
-  String message;
-  MatchingDto matchingDto;
+  private String message;
+  private MatchingDto matchingDto;
   //UserDto
 
 }

@@ -3,13 +3,11 @@ package com.zb.meeteat.domain.matching.service;
 import com.zb.meeteat.domain.matching.dto.JoinRequestDto;
 import com.zb.meeteat.domain.matching.dto.MatchingDto;
 import com.zb.meeteat.domain.matching.dto.MatchingRequestDto;
-import com.zb.meeteat.domain.matching.dto.TeamResponseDto;
-import com.zb.meeteat.domain.matching.dto.TempTeamResponseDto;
 import com.zb.meeteat.domain.matching.repository.MatchingRepository;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantDto;
+import com.zb.meeteat.domain.sse.service.SseService;
 import com.zb.meeteat.type.MatchingStatus;
 import jakarta.annotation.PostConstruct;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Slf4j
 @Service
@@ -32,13 +29,14 @@ public class MatchingService {
   private static final String MATCHING_QUEUE = "matching_queue";
   private static final String AGREE_COUNT = "agree_count";
   private static final String GROUP_SIZE = "group_size";
-  private static final double EARTH_RADIUS = 6371.0;
+  private static final double EARTH_RADIUS = 6371000; //단위:m(미터)
+  private static final double MAX_DISTANCE_CONDITION = 2000; //단위:m(미터)
+  private final SseService sseService;
   private final MatchingRepository matchingRepository;
   private final int MAX_SEARCHING_TIME = 100;
   private final int RESPONSE_WAIT_TIME = 180;
   private final RedisTemplate<String, MatchingRequestDto> redisTemplate;
   private final RedisTemplate<String, String> redisTeamTemplate;
-  private final Map<Long, SseEmitter> sseEmitterMap = new ConcurrentHashMap<>();
   private final Set<Long> cancelledUserSet = ConcurrentHashMap.newKeySet();//취소한 유저가 계산되고 있는 경우를 체크하기 위해
   private final PriorityQueue<Integer> teamIdPq = new PriorityQueue<>();
   private final Map<String, List<MatchingRequestDto>> tempTeamMap = new ConcurrentHashMap<>();
@@ -48,25 +46,6 @@ public class MatchingService {
     for (int i = 1; i <= 1000000; i++) {
       teamIdPq.add(i);
     }
-  }
-
-  public SseEmitter subscribe() {
-    //TODO 임시로 userId를 정해놓음
-    long userId = 1L;
-    SseEmitter sseEmitter = new SseEmitter(600_000L); // connectionTimeOut 10분
-    try {
-      sseEmitter.send(SseEmitter.event().name("match").data("SSE Connected"));
-    } catch (IOException e) {
-      sseEmitter.completeWithError(e);
-    }
-    sseEmitterMap.put(userId, sseEmitter);
-    sseEmitter.onCompletion(
-        () -> sseEmitterMap.remove(userId)); // sse 연결종료시 map에서 삭제
-    sseEmitter.onTimeout(
-        () -> sseEmitterMap.remove(userId)); // TODO:타임아웃이 된 경우 다시 매칭할건지 물어봐야함
-    sseEmitter.onError(
-        (e) -> sseEmitterMap.remove(userId)); // TODO: sseEmitter 연결에 오류가 발생할 경우 지수 백오프 방식 도입
-    return sseEmitter;
   }
 
   // 매칭 요청
@@ -80,9 +59,7 @@ public class MatchingService {
   public void cancelMatching() {
     //TODO 임시로 userId를 정해놓음
     long userId = 1L;
-    SseEmitter emitter = sseEmitterMap.get(userId);
-    emitter.complete();
-    sseEmitterMap.remove(userId);
+    sseService.unsubscribe(userId);
     cancelledUserSet.add(userId);
   }
 
@@ -128,7 +105,7 @@ public class MatchingService {
         redisTeamTemplate.opsForHash().put(teamName, GROUP_SIZE, String.valueOf(team.size()));
         redisTeamTemplate.expire(teamName, RESPONSE_WAIT_TIME, TimeUnit.SECONDS);
         tempTeamMap.put(teamName, team);
-        notifyTempTeam(team, teamId);
+        sseService.notifyTempTeam(team, teamId);
       } else {
         for (MatchingRequestDto member : team) {
           redisTemplate.opsForList().rightPush(MATCHING_QUEUE, member);
@@ -170,58 +147,12 @@ public class MatchingService {
         .status(MatchingStatus.MATCHED).build();
     saveTeam(matchingDto);
     //TODO 사람들에게 알림
-    notifyTeam(team);
+    sseService.notifyTeam(team);
     //TODO 매칭내역 저장
   }
 
   public void saveTeam(MatchingDto matchingDto) {
     matchingRepository.save(MatchingDto.toEntity(matchingDto));
-  }
-
-  private void notifyTeam(List<MatchingRequestDto> team) {
-    TeamResponseDto teamResponseDto = new TeamResponseDto();
-    for (MatchingRequestDto matchingRequestDto : team) {
-      sendTeamEvent(matchingRequestDto.getUserId(), teamResponseDto);
-    }
-  }
-
-  private void sendTeamEvent(long userId, TeamResponseDto teamResponseDto) {
-    SseEmitter emitter = sseEmitterMap.get(userId);
-    if (emitter == null) {
-      try {
-        emitter.send(SseEmitter.event().name("match").data(teamResponseDto));
-        emitter.complete();
-        sseEmitterMap.remove(userId);
-      } catch (IOException e) {
-        emitter.complete();
-        sseEmitterMap.remove(userId);
-      }
-    }
-  }
-
-  //임시 생성된 팀을 사람들에게 알림
-  private void notifyTempTeam(List<MatchingRequestDto> team, int teamId) {
-    TempTeamResponseDto responseDto = new TempTeamResponseDto();
-    responseDto.setTeamId(teamId);
-    responseDto.setMessage("임시 모임이 생성되었습니다.");
-    for (MatchingRequestDto member : team) {
-      responseDto.getRestaurantList().add(member.getRestaurantDto());
-    }
-    for (MatchingRequestDto m : team) {
-      sendTempTeamEvent(m.getUserId(), responseDto);
-    }
-  }
-
-  private void sendTempTeamEvent(Long userId, TempTeamResponseDto tempTeamResponseDto) {
-    SseEmitter emitter = sseEmitterMap.get(userId);
-    if (emitter != null) {
-      try {
-        emitter.send(SseEmitter.event().name("match").data(tempTeamResponseDto));
-      } catch (IOException e) {
-        emitter.complete();
-        sseEmitterMap.remove(userId);
-      }
-    }
   }
 
   private boolean checkTeamCondition(List<MatchingRequestDto> team, MatchingRequestDto member) {
@@ -242,11 +173,13 @@ public class MatchingService {
 
   private boolean checkDistanceCondition(MatchingRequestDto member1, MatchingRequestDto member2) {
     if (calculateDistance(member1.getUserLat(), member1.getUserLon(),
-        member2.getRestaurantDto().getLat(), member2.getRestaurantDto().getLon()) > 2) {
+        member2.getRestaurantDto().getLat(), member2.getRestaurantDto().getLon())
+        > MAX_DISTANCE_CONDITION) {
       return false;
     }
     if (calculateDistance(member2.getUserLat(), member2.getUserLon(),
-        member1.getRestaurantDto().getLat(), member1.getRestaurantDto().getLon()) > 2) {
+        member1.getRestaurantDto().getLat(), member1.getRestaurantDto().getLon())
+        > MAX_DISTANCE_CONDITION) {
       return false;
     }
     return true;
