@@ -36,10 +36,10 @@ public class RestaurantController {
   }
 
   @GetMapping("/{restaurantId}")
-  public ResponseEntity<Restaurant> getRestaurant(
+  public ResponseEntity<RestaurantResponse> getRestaurant(
       @PathVariable(name = "restaurantId") Long restaurantId) {
 
-    Restaurant restaurant = restaurantService.getRestaurant(restaurantId);
+    RestaurantResponse restaurant = restaurantService.getRestaurant(restaurantId);
     if (restaurant == null) {
       return ResponseEntity.notFound().build();
     }

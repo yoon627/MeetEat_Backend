@@ -76,9 +76,8 @@ public class RestaurantService {
     return restaurants;
   }
 
-  public Restaurant getRestaurant(Long restaurantId) {
-    return restaurantRepository.findById(restaurantId)
-        .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
+  public RestaurantResponse getRestaurant(Long restaurantId) {
+    return restaurantRepository.getRestaurantById(restaurantId);
   }
 
   public Page<RestaurantReview> getRestaurantReviews(

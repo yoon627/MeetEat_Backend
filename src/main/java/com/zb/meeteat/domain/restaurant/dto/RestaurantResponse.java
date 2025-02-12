@@ -23,6 +23,4 @@ public class RestaurantResponse {
   private String category_name;
   private double rating;
   private String thumbnail;
-
-
 }
