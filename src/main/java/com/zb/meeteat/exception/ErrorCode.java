@@ -13,6 +13,7 @@ public enum ErrorCode {
   ,REVIEW_TIME_NOT_EXCEEDED(HttpStatus.BAD_REQUEST, "후기 작성시간은 매칭 약속 시간 이후 2시간 이후부터 작성가능합니다.")
   ,CANCELED_MATCHING(HttpStatus.BAD_REQUEST, "취소된 매칭입니다.")
   ,NOT_EXIST_RESTAURANT(HttpStatus.BAD_REQUEST, "삭제되었거나 존재하지 않는 식당입니다.")
+  ,FAIL_FILE_UPLOAD(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드에 실패하였습니다.")
   ,FILE_UPLOAD_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "업로드 파일 최대 갯수는 5장입니다.")
   ,INVALID_FILE_FORMAT(HttpStatus.BAD_REQUEST, "잘못된 이미지 형식입니다. jpg, jpeg, png 만 허용됩니다.")
   ,USER_LOCATION_NOT_PROVIDED(HttpStatus.BAD_REQUEST, "거리순 정렬에 사용할 사용자의 위치값이 누락되었습니다.")

@@ -25,5 +25,5 @@ public class CreateReviewRequest {
   @NotBlank(message = "후기 작성은 필수입니다.")
   private String description;
 
-  private MultipartFile file;
+  private MultipartFile[] files;
 }

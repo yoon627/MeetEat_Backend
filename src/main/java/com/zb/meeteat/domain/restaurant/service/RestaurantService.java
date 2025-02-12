@@ -7,7 +7,6 @@ import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
 import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequest;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
-import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantRepository;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantReviewRepository;
@@ -17,18 +16,22 @@ import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.exception.ErrorCode;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RestaurantService {
 
+  private final S3ImageUpload s3ImageUpload;
   private final RestaurantRepository restaurantRepository;
   private final RestaurantReviewRepository restaurantReviewRepository;
   private final UserRepository userRepository;
@@ -114,14 +117,14 @@ public class RestaurantService {
     }
 
     // 4. 첨부파일 확인
-    String imageUrls = saveImage(req.getFile());
+    String imageUrls = saveImage(req.getFiles());
 
     // 5. 데이터 저장하기
     RestaurantReview review = RestaurantReview.builder()
         .rating(req.getRating())
         .description(req.getDescription())
         .imgUrl(imageUrls)
-        .matchingHistoryId(history.getId())
+        .matchingHistoryId(req.getMatchingHistoryId())
         .user(user)
         .restaurant(matching.getRestaurant())
         .build();
@@ -142,30 +145,19 @@ public class RestaurantService {
     return restaurantReviewRepository.findRestaurantReviewByMatchingHistoryId(matchingHistoryId);
   }
 
-  private String saveImage(MultipartFile file) {
-    if (file.isEmpty() && file.getSize() > MAX_FILE_COUNT) {
+  private String saveImage(MultipartFile[] files) {
+    if (files.length > MAX_FILE_COUNT || files.length < 1) {
       return null;
     }
 
-    // todo 이미지 저장하기
-    String imagesUrl = null;
-      if (file.getSize() > 0) {
-
-        // 파일 확장자 확인
-        validateFileExtension(file);
-        // AWS image Upload => imageUrls = [imageUrl]
-      }
-
-    return imagesUrl;
-  }
-
-  private void validateFileExtension(MultipartFile file) {
-    List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "raw", "heic", "heif");
-
-    String fileName = file.getOriginalFilename();
-    String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-    if (!ALLOWED_EXTENSIONS.contains(extension)) {
-      throw new CustomException(ErrorCode.INVALID_FILE_FORMAT);
+    List<String> imgUrlList = new ArrayList<String>();
+    for (MultipartFile image : files) {
+      String newFileName = s3ImageUpload.uploadImage(image);
+      imgUrlList.add(newFileName);
+      log.info("➡️ 이미지 저장 :{} - {}", image.getOriginalFilename(), newFileName);
     }
+
+    return String.join(",", imgUrlList);
   }
+
 }
