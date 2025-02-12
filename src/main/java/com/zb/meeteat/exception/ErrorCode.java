@@ -15,6 +15,7 @@ public enum ErrorCode {
   ,NOT_EXIST_RESTAURANT(HttpStatus.BAD_REQUEST, "삭제되었거나 존재하지 않는 식당입니다.")
   ,FILE_UPLOAD_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "업로드 파일 최대 갯수는 5장입니다.")
   ,INVALID_FILE_FORMAT(HttpStatus.BAD_REQUEST, "잘못된 이미지 형식입니다. jpg, jpeg, png 만 허용됩니다.")
+  ,USER_LOCATION_NOT_PROVIDED(HttpStatus.BAD_REQUEST, "거리순 정렬에 사용할 사용자의 위치값이 누락되었습니다.")
   ;
 
   private final HttpStatus httpStatus;

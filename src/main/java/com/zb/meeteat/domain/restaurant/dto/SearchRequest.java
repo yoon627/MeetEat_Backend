@@ -35,7 +35,7 @@ public class SearchRequest {
   @Pattern(regexp = "^(DEFAULT|RATING|DISTANCE)$", message = "정렬 값은 DEFAULT, RATING, DISTANCE 중 하나여야 합니다.")
   private String sorted;       // RATING : 평점순(내림차순), DISTANCE: 거리순(오름차순)
 
-  @Min(value = 1, message = "페이지는 1이상 가능합니다")
+  @Min(value = 0, message = "페이지는 0이상 가능합니다")
   private int page;
   @Min(value = 1, message = "최소 항목수 1이상 가능합니다")
   private int size;

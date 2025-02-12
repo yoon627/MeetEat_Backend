@@ -9,10 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface RestaurantReviewRepository extends JpaRepository<RestaurantReview, Long> {
 
-  @Query("SELECT r "
-      + "FROM RestaurantReview r "
-      + "WHERE r.restaurant.id = :restaurantId")
-  Page<RestaurantReview> findRestaurantReviewByRestaurantId(
+  @Query("SELECT r FROM RestaurantReview r WHERE r.restaurant.id = :restaurantId")
+  Page<RestaurantReview> getRestaurantReviewByRestaurantId(
       @Param("restaurantId") Long restaurantId, Pageable pageable);
 
   RestaurantReview findRestaurantReviewByMatchingHistoryId(Long matchingHistoryId);

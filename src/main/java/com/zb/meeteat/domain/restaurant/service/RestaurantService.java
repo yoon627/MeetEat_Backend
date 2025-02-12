@@ -5,6 +5,7 @@ import com.zb.meeteat.domain.matching.entity.MatchingHistory;
 import com.zb.meeteat.domain.matching.entity.MatchingStatus;
 import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
 import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequest;
+import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
@@ -33,28 +34,31 @@ public class RestaurantService {
   private final UserRepository userRepository;
   private final MatchingHistoryRepository matchingHistoryRepository;
   private static int MAX_FILE_COUNT = 7;
+  private static int AFTER_MATCHING_TIME = 2;
 
-  public Page<Restaurant> getRestaurantList(SearchRequest search) {
+  public Page<RestaurantResponse> getRestaurantList(SearchRequest search) {
 
     String categoryName = search.getCategoryName().equals("전체") ? "" : search.getCategoryName();
     search.setCategoryName(categoryName);
 
     // Pageable 객체 생성 (페이지, 사이즈, 정렬 방식)
-    Pageable pageable = PageRequest.of(search.getPage() - 1, search.getSize());
+    Pageable pageable = PageRequest.of(search.getPage(), search.getSize());
 
     // 정렬 기준에 따라 쿼리 메소드 실행
-    if ("RATING".equals(search.getSorted())) {
-      if (Double.isNaN(search.getUserX()) || Double.isNaN(search.getUserX())) {
-        throw new CustomException(ErrorCode.BAD_REQUEST);
-      }
+    Page<RestaurantResponse> restaurants = Page.empty();
 
-      return restaurantRepository.findRestaurantByRegionAndPlaceNameAndCategoryNameOrderByRatingDesc(
+    if ("RATING".equals(search.getSorted())) {
+      restaurants = restaurantRepository.getRestaurantByRegionAndPlaceNameAndCategoryNameOrderByRatingDesc(
           search.getRegion(),
           search.getPlaceName(),
           search.getCategoryName(),
           pageable);
     } else if ("DISTANCE".equals(search.getSorted())) {
-      return restaurantRepository.findRestaurantByResionAndPlaceNameAndCateoryNameOrderByDistance(
+      if (Double.isNaN(search.getUserX()) || Double.isNaN(search.getUserX())) {
+        throw new CustomException(ErrorCode.USER_LOCATION_NOT_PROVIDED);
+      }
+
+      restaurants = restaurantRepository.getRestaurantByRegionAndPlaceNameAndCategoryNameOrderByDistance(
           search.getUserY(),
           search.getUserX(),
           search.getRegion(),
@@ -62,12 +66,14 @@ public class RestaurantService {
           search.getCategoryName(),
           pageable);
     } else {
-      return restaurantRepository.findRestaurantByRegionAndCategoryNameAndPlaceName(
+      restaurants = restaurantRepository.getRestaurantByRegionAndCategoryNameAndPlaceName(
           search.getRegion(),
           search.getPlaceName(),
           search.getCategoryName(),
           pageable);
     }
+
+    return restaurants;
   }
 
   public Restaurant getRestaurant(Long restaurantId) {
@@ -79,14 +85,14 @@ public class RestaurantService {
       Long restaurantId, int page, int size) {
 
     // Pageable 객체 생성 (페이지, 사이즈, 정렬 방식)
-    Pageable pageable = PageRequest.of(page - 1, size);
+    Pageable pageable = PageRequest.of(page, size);
 
-    return restaurantReviewRepository.findRestaurantReviewByRestaurantId(restaurantId, pageable);
+    return restaurantReviewRepository.getRestaurantReviewByRestaurantId(restaurantId, pageable);
   }
 
   public RestaurantReview createReview(Long userId, CreateReviewRequest req) throws CustomException {
 
-    // 1. user 확인
+    // 1. user 확인 TODO userid 토큰발급시 삭제
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
 
@@ -104,13 +110,8 @@ public class RestaurantService {
     LocalDateTime matchingTime = matching.getCreatedAt();
     LocalDateTime currentTime = LocalDateTime.now();
     Duration duration = Duration.between(matchingTime, currentTime);
-    if (duration.toHours() < 2) {
+    if (duration.toHours() < AFTER_MATCHING_TIME) {
       throw new CustomException(ErrorCode.REVIEW_TIME_NOT_EXCEEDED);
-    }
-
-    Restaurant restaurant = matching.getRestaurant();
-    if (restaurant == null) {
-      throw new CustomException(ErrorCode.NOT_EXIST_RESTAURANT);
     }
 
     // 4. 첨부파일 확인
@@ -123,7 +124,7 @@ public class RestaurantService {
         .imgUrl(imageUrls)
         .matchingHistoryId(history.getId())
         .user(user)
-        .restaurant(restaurant)
+        .restaurant(matching.getRestaurant())
         .build();
 
     return restaurantReviewRepository.save(review);

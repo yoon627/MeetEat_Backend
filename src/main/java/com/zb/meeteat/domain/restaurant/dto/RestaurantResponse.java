@@ -1,10 +1,6 @@
-package com.zb.meeteat.domain.restaurant.entity;
+package com.zb.meeteat.domain.restaurant.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,11 +12,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "restaurant")
-public class Restaurant {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class RestaurantResponse {
   private Long id;
   private Long kakaomaps_id;
   private String place_name;
@@ -30,4 +22,7 @@ public class Restaurant {
   private String road_address_name;
   private String category_name;
   private double rating;
+  private String thumbnail;
+
+
 }
