@@ -13,6 +13,6 @@ public class JoinRequestDto {
 
   private int teamId;
   private long userId;
-  private Boolean isJoin;
+  private boolean join;
 
 }
