@@ -11,10 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Setter
 public class CreateReviewRequest {
 
-  // todo 토큰추가되면 삭제
-  @NotNull
-  private Long userId;
-
   @NotNull(message = "매칭 이력 ID는 필수입니다.")
   private Long matchingHistoryId;
 

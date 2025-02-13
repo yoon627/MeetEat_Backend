@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -94,7 +95,7 @@ public class RestaurantService {
 
   public RestaurantReview createReview(Long userId, CreateReviewRequest req) throws CustomException {
 
-    // 1. user 확인 TODO userid 토큰발급시 삭제
+    // 1. user 정보 가져오기
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
 
@@ -146,7 +147,8 @@ public class RestaurantService {
   }
 
   private String saveImage(MultipartFile[] files) {
-    if (files.length > MAX_FILE_COUNT || files.length < 1) {
+    if (files.length > MAX_FILE_COUNT || files.length < 1
+        || files[0].isEmpty() || Objects.requireNonNull(files[0].getOriginalFilename()).isEmpty()) {
       return null;
     }
 
