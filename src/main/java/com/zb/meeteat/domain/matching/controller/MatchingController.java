@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/matching")
+@RequestMapping("/api/matching")
 public class MatchingController {
 
   private final MatchingService matchingService;
 
-  @PostMapping
+  @PostMapping("/join")
   public void joinTempTeam(@RequestBody JoinRequestDto joinRequestDto) {
     matchingService.joinTempTeam(joinRequestDto);
   }

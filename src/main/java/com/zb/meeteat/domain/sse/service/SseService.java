@@ -1,8 +1,11 @@
 package com.zb.meeteat.domain.sse.service;
 
+import com.zb.meeteat.domain.matching.dto.JoinRequestDto;
+import com.zb.meeteat.domain.matching.dto.MatchingDto;
 import com.zb.meeteat.domain.matching.dto.MatchingRequestDto;
 import com.zb.meeteat.domain.matching.dto.TeamResponseDto;
 import com.zb.meeteat.domain.matching.dto.TempTeamResponseDto;
+import com.zb.meeteat.domain.restaurant.dto.RestaurantDto;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +25,7 @@ public class SseService {
   public SseEmitter subscribe() {
     //TODO 임시로 userId를 정해놓음
     long userId = 1L;
-    SseEmitter sseEmitter = new SseEmitter(600_000L); // connectionTimeOut 10분
+    SseEmitter sseEmitter = new SseEmitter(600_0000L); // connectionTimeOut 10분
     try {
       sseEmitter.send(SseEmitter.event().name("match").data("SSE Connected"));
     } catch (IOException e) {
@@ -45,27 +48,6 @@ public class SseService {
   }
 
 
-  public void notifyTeam(List<MatchingRequestDto> team) {
-    TeamResponseDto teamResponseDto = new TeamResponseDto();
-    for (MatchingRequestDto matchingRequestDto : team) {
-      sendTeamEvent(matchingRequestDto.getUserId(), teamResponseDto);
-    }
-  }
-
-  public void sendTeamEvent(long userId, TeamResponseDto teamResponseDto) {
-    SseEmitter emitter = sseEmitterMap.get(userId);
-    if (emitter == null) {
-      try {
-        emitter.send(SseEmitter.event().name("match").data(teamResponseDto));
-        emitter.complete();
-        sseEmitterMap.remove(userId);
-      } catch (IOException e) {
-        emitter.complete();
-        sseEmitterMap.remove(userId);
-      }
-    }
-  }
-
   public void notifyTempTeam(List<MatchingRequestDto> team, int teamId) {
     TempTeamResponseDto responseDto = new TempTeamResponseDto();
     responseDto.setTeamId(teamId);
@@ -78,15 +60,77 @@ public class SseService {
     }
   }
 
-  public void sendTempTeamEvent(Long userId, TempTeamResponseDto tempTeamResponseDto) {
+  public void notifyTempTeamJoin(List<MatchingRequestDto> team, JoinRequestDto joinRequestDto) {
+    for (MatchingRequestDto m : team) {
+      sendTempTeamJoinEvent(m.getUserId(), joinRequestDto);
+    }
+  }
+
+  public void sendTempTeamJoinEvent(Long userId, JoinRequestDto joinRequestDto) {
+    if (userId != joinRequestDto.getUserId()) {
+      return;
+    }
     SseEmitter emitter = sseEmitterMap.get(userId);
+    log.info("tempTeamJoin emitter: {}", emitter);
     if (emitter != null) {
+      log.info("tempTeamJoin emitter: null 아님 {}", emitter);
       try {
-        emitter.send(SseEmitter.event().name("match").data(tempTeamResponseDto));
+        emitter.send(SseEmitter.event().name("Join").data(joinRequestDto));
+        log.info("tempTeamJoin 알림 보냄: {}", emitter);
       } catch (IOException e) {
         emitter.complete();
         sseEmitterMap.remove(userId);
+        log.info("tempTeamJoin emitter 연결 끊기: {}", emitter);
       }
+    } else {
+      log.info("tempTeamJoin emitter: null {}", emitter);
+    }
+  }
+
+  public void sendTempTeamEvent(Long userId, TempTeamResponseDto tempTeamResponseDto) {
+    SseEmitter emitter = sseEmitterMap.get(userId);
+    log.info("tempTeam emitter: {}", emitter);
+    if (emitter != null) {
+      log.info("tempTeam emitter: null 아님 {}", emitter);
+      try {
+        emitter.send(SseEmitter.event().name("TempTeam").data(tempTeamResponseDto));
+        log.info("tempTeam 알림 보냄: {}", emitter);
+      } catch (IOException e) {
+        emitter.complete();
+        sseEmitterMap.remove(userId);
+        log.info("tempTeam emitter 연결 끊기: {}", emitter);
+      }
+    } else {
+      log.info("tempTeam emitter: null {}", emitter);
+    }
+  }
+
+  public void notifyTeam(RestaurantDto restaurantDto, List<MatchingRequestDto> team) {
+    TeamResponseDto teamResponseDto = TeamResponseDto.builder().message("팀 생성이 완료되었습니다.")
+        .matchingDto(MatchingDto.builder().restaurant(restaurantDto).build()).build();
+    for (MatchingRequestDto matchingRequestDto : team) {
+      sendTeamEvent(matchingRequestDto.getUserId(), teamResponseDto);
+    }
+  }
+
+  public void sendTeamEvent(long userId, TeamResponseDto teamResponseDto) {
+    SseEmitter emitter = sseEmitterMap.get(userId);
+    log.info("team emitter: {}", emitter);
+    if (emitter != null) {
+      log.info("emitter: null아님 {}", emitter);
+
+      try {
+        log.info("팀 생성 완료 알림 보내기 중: {}", emitter);
+        emitter.send(SseEmitter.event().name("Team").data(teamResponseDto));
+        log.info("팀 생성 완료 알림 보내기 완료:{}", emitter);
+      } catch (IOException e) {
+        emitter.complete();
+        sseEmitterMap.remove(userId);
+        log.info("Team emitter 연결 끊기: {}", emitter);
+      }
+    } else {
+      log.info("emitter: null임 {}", emitter);
+
     }
   }
 }

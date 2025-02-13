@@ -63,7 +63,7 @@ public class RedisService {
     redisTeamTemplate.delete(teamName);
   }
 
-  public void modifyCurrentTempTeamSize(String teamName) {
+  public void addCurrentTempTeamSize(String teamName) {
     redisTeamTemplate.opsForHash().increment(teamName, AGREE_COUNT, 1);
   }
 

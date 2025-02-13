@@ -10,7 +10,8 @@
 <label for="userIdInput">Enter User ID:</label>
 <input id="userIdInput" placeholder="Enter your ID" type="number"/>
 <button onclick="startMatching()">Start Matching</button>
-
+<button onclick="acceptMatching()">Accept</button>
+<button onclick="rejectMatching()">Reject</button>
 <p>User ID: <span id="userIdDisplay">Not Set</span></p>
 <p id="matchMessage"></p>
 <script>
@@ -25,6 +26,46 @@
     .catch(error => console.error("❌ SSE 연결 실패:", error));
   }
 
+  function acceptMatching() {
+    const userId = document.getElementById("userIdInput").value;
+
+    fetch(`/api/matching/join`, {
+      method: "POST",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(
+          {
+            teamId: 1,
+            userId: 1,
+            join: true,
+          }
+      )
+    })
+    .catch(error => console.error("Error requesting match:", error));
+  }
+
+  function rejectMatching() {
+    const userId = document.getElementById("userIdInput").value;
+
+    fetch(`/api/matching/join`, {
+      method: "POST",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(
+          {
+            teamId: 1,
+            userId: 1,
+            join: false,
+          }
+      )
+    })
+    .catch(error => console.error("Error requesting match:", error));
+  }
+
   function subscribe() {
     return new Promise((resolve, reject) => {
       const userId = document.getElementById("userIdInput").value;
@@ -34,22 +75,40 @@
         return;
       }
 
-      eventSource = new EventSource(`/matching/subscribe`);
+      eventSource = new EventSource(`/api/sse/subscribe`);
 
       eventSource.onopen = function () {
         console.log("✅ SSE connection opened.");
         resolve(); // SSE 연결 성공 시 resolve 호출
       };
-
       eventSource.onerror = function (error) {
         console.error("❌ SSE error:", error);
         eventSource.close();
         reject(error); // SSE 연결 실패 시 reject 호출
       };
-
-      eventSource.addEventListener("match", (event) => {
+      eventSource.addEventListener("Matching", (event) => {
         document.getElementById("matchMessage").innerText = event.data;
         alert(event.data);
+        console.log("Matching");
+        console.log(event);
+      });
+      eventSource.addEventListener("TempTeam", (event) => {
+        document.getElementById("matchMessage").innerText = event.data;
+        alert(event.data);
+        console.log("TempTeam");
+        console.log(event);
+      });
+      eventSource.addEventListener("Join", (event) => {
+        document.getElementById("matchMessage").innerText = event.data;
+        alert(event.data);
+        console.log("Join");
+        console.log(event);
+      });
+      eventSource.addEventListener("Team", (event) => {
+        document.getElementById("matchMessage").innerText = event.data;
+        alert(event.data);
+        console.log("Team");
+        console.log(event);
       });
     });
   }
@@ -58,7 +117,7 @@
 
     const userId = document.getElementById("userIdInput").value;
 
-    fetch(`/matching/request`, {
+    fetch(`/api/matching/request`, {
       method: "POST",
       headers: {
         'Accept': 'application/json',
@@ -67,7 +126,9 @@
       body: JSON.stringify(
           {
             userId: 1,
-            groupSize: 2,
+            userLon: 0,
+            userLat: 0,
+            groupSize: 1,
             restaurantDto: {
               name: "식당이름",
               categoryName: "중식"
