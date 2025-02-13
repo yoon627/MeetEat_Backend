@@ -18,24 +18,24 @@ public class RedisService {
   private static final String GROUP_SIZE = "group_size";
   private final int TEMP_TEAM_WAIT_TIME = 180;
 
-  private final RedisTemplate<String, MatchingRequestDto> redisTemplate;
+  private final RedisTemplate<String, MatchingRequestDto> redisMatchingTemplate;
   private final RedisTemplate<String, String> redisTeamTemplate;
 
   public boolean isMatchingQueueEmpty() {
-    return !(redisTemplate.hasKey(MATCHING_QUEUE)
-        && redisTemplate.opsForList().size(MATCHING_QUEUE) > 0);
+    return !(redisMatchingTemplate.hasKey(MATCHING_QUEUE)
+        && redisMatchingTemplate.opsForList().size(MATCHING_QUEUE) > 0);
   }
 
   public void addMatchingQueue(MatchingRequestDto matchingRequestDto) {
-    redisTemplate.opsForList().rightPush(MATCHING_QUEUE, matchingRequestDto);
+    redisMatchingTemplate.opsForList().rightPush(MATCHING_QUEUE, matchingRequestDto);
   }
 
   public MatchingRequestDto leftPopMatchingQueue() {
-    return redisTemplate.opsForList().leftPop(MATCHING_QUEUE);
+    return redisMatchingTemplate.opsForList().leftPop(MATCHING_QUEUE);
   }
 
   public void rightPushMatchingQueue(MatchingRequestDto matchingRequestDto) {
-    redisTemplate.opsForList().rightPush(MATCHING_QUEUE, matchingRequestDto);
+    redisMatchingTemplate.opsForList().rightPush(MATCHING_QUEUE, matchingRequestDto);
   }
 
   public void makeTempTeam(String teamName, int size) {
