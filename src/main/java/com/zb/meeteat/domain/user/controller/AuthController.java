@@ -4,6 +4,7 @@ import com.zb.meeteat.domain.user.dto.AuthCodeResponseDto;
 import com.zb.meeteat.domain.user.dto.SigninRequestDto;
 import com.zb.meeteat.domain.user.dto.SignupRequestDto;
 import com.zb.meeteat.domain.user.service.AuthService;
+import com.zb.meeteat.domain.user.service.SocialAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final SocialAuthService socialAuthService;
 
     // 회원가입
     @PostMapping("/signup")
@@ -33,6 +35,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.signin(requestDto));
     }
 
+    // 소셜 로그인
     @PostMapping("/signin/{provider}")
     public ResponseEntity<AuthCodeResponseDto> socialSignin(
             @PathVariable String provider,
@@ -46,8 +49,15 @@ public class AuthController {
             throw new IllegalArgumentException("인가 코드가 제공되지 않았습니다.");
         }
 
-        AuthCodeResponseDto response = authService.socialSignin(provider, authCode);
+        AuthCodeResponseDto response = socialAuthService.socialSignin(provider, authCode);
         return ResponseEntity.ok(response);
+    }
+
+    // 로그 아웃
+    @PostMapping("/signout")
+    public ResponseEntity<Void> signout(@RequestHeader("Authorization") String token) {
+        authService.signout(token);
+        return ResponseEntity.ok().build();
     }
 
 
