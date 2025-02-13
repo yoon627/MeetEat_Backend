@@ -1,5 +1,6 @@
 package com.zb.meeteat.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     // IllegalArgumentException이 발생하면 400 응답을 반환 (예: 이메일 중복, 닉네임 중복)
@@ -35,6 +37,7 @@ public class GlobalExceptionHandler {
     // 예상치 못한 예외 발생 시 500 응답을 반환
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGeneralException(Exception e) {
+        log.error("서버 오류 발생: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("서버에 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     }
@@ -50,7 +53,6 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(errorCode.getStatus()).body(errorResponse);
     }
-
 
 
 }
