@@ -1,6 +1,7 @@
 package com.zb.meeteat.domain.user.service;
 
 import com.zb.meeteat.domain.user.dto.AuthCodeResponseDto;
+import com.zb.meeteat.domain.user.dto.ChangePasswordRequest;
 import com.zb.meeteat.domain.user.dto.SigninRequestDto;
 import com.zb.meeteat.domain.user.dto.SignupRequestDto;
 import com.zb.meeteat.domain.user.entity.Role;
@@ -12,13 +13,9 @@ import com.zb.meeteat.exception.ErrorCode;
 import com.zb.meeteat.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -91,6 +88,22 @@ public class AuthService {
         jwtUtil.blacklistToken(jwt);
     }
 
+    @Transactional
+    public void changePassword(User user, ChangePasswordRequest request) {
+        // 1. 현재 비밀번호 검증
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new CustomException(ErrorCode.PASSWORD_MISMATCH);
+        }
+
+        // 2. 새 비밀번호가 현재 비밀번호와 동일한지 체크
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new CustomException(ErrorCode.SAME_PASSWORD);
+        }
+
+        // 3. 비밀번호 변경 후 저장
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
 
 }
 
