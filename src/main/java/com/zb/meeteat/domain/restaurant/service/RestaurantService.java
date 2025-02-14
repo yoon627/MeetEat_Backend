@@ -4,10 +4,12 @@ import com.zb.meeteat.domain.matching.entity.Matching;
 import com.zb.meeteat.domain.matching.entity.MatchingHistory;
 import com.zb.meeteat.domain.matching.entity.MatchingStatus;
 import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
+import com.zb.meeteat.domain.restaurant.dto.Category;
 import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequest;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantReviewsResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
+import com.zb.meeteat.domain.restaurant.dto.Sort;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantRepository;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantReviewRepository;
@@ -43,8 +45,7 @@ public class RestaurantService {
 
   public Page<RestaurantResponse> getRestaurantList(SearchRequest search) {
 
-    String categoryName = search.getCategoryName().equals("전체") ? "" : search.getCategoryName();
-    search.setCategoryName(categoryName);
+    String categoryName = Category.전체.equals(search.getCategoryName()) ? "" : search.getCategoryName().toString();
 
     // Pageable 객체 생성 (페이지, 사이즈, 정렬 방식)
     Pageable pageable = PageRequest.of(search.getPage(), search.getSize());
@@ -52,13 +53,14 @@ public class RestaurantService {
     // 정렬 기준에 따라 쿼리 메소드 실행
     Page<RestaurantResponse> restaurants = Page.empty();
 
-    if ("RATING".equals(search.getSorted())) {
+
+    if (Sort.RATING.equals(search.getSorted())) {
       restaurants = restaurantRepository.getRestaurantByRegionAndPlaceNameAndCategoryNameOrderByRatingDesc(
-          search.getRegion(),
+          search.getRegion().toString(),
           search.getPlaceName(),
-          search.getCategoryName(),
+          categoryName,
           pageable);
-    } else if ("DISTANCE".equals(search.getSorted())) {
+    } else if (Sort.DISTANCE.equals(search.getSorted())) {
       if (Double.isNaN(search.getUserX()) || Double.isNaN(search.getUserX())) {
         throw new CustomException(ErrorCode.USER_LOCATION_NOT_PROVIDED);
       }
@@ -66,15 +68,15 @@ public class RestaurantService {
       restaurants = restaurantRepository.getRestaurantByRegionAndPlaceNameAndCategoryNameOrderByDistance(
           search.getUserY(),
           search.getUserX(),
-          search.getRegion(),
+          search.getRegion().toString(),
           search.getPlaceName(),
-          search.getCategoryName(),
+          categoryName,
           pageable);
     } else {
       restaurants = restaurantRepository.getRestaurantByRegionAndCategoryNameAndPlaceName(
-          search.getRegion(),
+          search.getRegion().toString(),
           search.getPlaceName(),
-          search.getCategoryName(),
+          categoryName,
           pageable);
     }
 
