@@ -6,7 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class AuthCodeResponseDto {
-    private String accessToken;
-    private boolean needProfileUpdate;
+
+  private String accessToken;
+  private boolean needProfileUpdate;
 
 }

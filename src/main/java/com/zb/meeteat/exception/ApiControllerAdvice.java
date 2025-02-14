@@ -30,14 +30,14 @@ public class ApiControllerAdvice {
     return errors;
   }
 
-  @ExceptionHandler(CustomException.class)
+  @ExceptionHandler(UserCustomException.class)
   public ResponseEntity<ExceptionResponse> customRequestException(final CustomException c) {
     ErrorCode errorCode = c.getErrorCode();
 
     return ResponseEntity
-        .status(errorCode.getHttpStatus())
+        .status(errorCode.getStatus())
         .body(new ExceptionResponse(
-            errorCode.getHttpStatus().value(),
+            errorCode.getStatus().value(),
             errorCode.getMessage()
         ));
   }
@@ -45,6 +45,7 @@ public class ApiControllerAdvice {
   @Getter
   @AllArgsConstructor
   public static class ExceptionResponse {
+
     private int status;
     private String message;
   }
