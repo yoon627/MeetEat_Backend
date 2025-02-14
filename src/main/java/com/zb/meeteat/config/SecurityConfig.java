@@ -43,7 +43,7 @@ public class SecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers(HttpMethod.POST, "/api/users/signup", "/api/users/signin",
-                "/api/users/signin/*").permitAll()
+                "/api/users/signin/*", "api/restaurants/search", "api/restaurants/*").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users/change-password").authenticated() // 인증 필요
             .anyRequest().authenticated()
         )
