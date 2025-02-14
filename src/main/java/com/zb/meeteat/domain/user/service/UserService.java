@@ -13,46 +13,45 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
-    @Transactional
-    public UserProfileResponse getUserProfile(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserCustomException(UserErrorCode.USER_NOT_FOUND));
+  @Transactional
+  public UserProfileResponse getUserProfile(Long userId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new UserCustomException(UserErrorCode.USER_NOT_FOUND));
 
-        return new UserProfileResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getNickname(),
-                user.getIntroduce(),
-                user.getRole().name(),
-                user.getSignupType().name(),
-                user.getMatchingCount(),
-                user.getIsPenalty(),
-                user.getBannedAt(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
+    return new UserProfileResponse(
+        user.getId(),
+        user.getEmail(),
+        user.getNickname(),
+        user.getIntroduce(),
+        user.getRole().name(),
+        user.getSignupType().name(),
+        user.getMatchingCount(),
+        user.getIsPenalty(),
+        user.getBannedAt(),
+        user.getCreatedAt(),
+        user.getUpdatedAt()
+    );
+  }
+
+  @Transactional
+  public void updateNickname(User user, String newNickname) {
+    // 닉네임 중복 검사
+    if (userRepository.existsByNickname(newNickname)) {
+      throw new UserCustomException(UserErrorCode.NICKNAME_ALREADY_REGISTERED);
     }
 
-    @Transactional
-    public void updateNickname(User user, String newNickname) {
-        // 닉네임 중복 검사
-        if (userRepository.existsByNickname(newNickname)) {
-            throw new UserCustomException(UserErrorCode.NICKNAME_ALREADY_REGISTERED);
-        }
+    // 닉네임 변경
+    user.updateNickname(newNickname);
+    userRepository.save(user);
+  }
 
-        // 닉네임 변경
-        user.updateNickname(newNickname);
-        userRepository.save(user);
-    }
-
-    @Transactional
-    public void updateIntroduce(User user, String newIntroduce) {
-        user.updateIntroduce(newIntroduce);
-        userRepository.save(user);
-    }
-
+  @Transactional
+  public void updateIntroduce(User user, String newIntroduce) {
+    user.updateIntroduce(newIntroduce);
+    userRepository.save(user);
+  }
 
 
 }

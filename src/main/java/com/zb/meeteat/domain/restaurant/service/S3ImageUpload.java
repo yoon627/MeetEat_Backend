@@ -3,7 +3,7 @@ package com.zb.meeteat.domain.restaurant.service;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.zb.meeteat.exception.UserCustomException;
+import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.exception.ErrorCode;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,7 +36,7 @@ public class S3ImageUpload {
       amazonS3.putObject(bucket, newFileName, inputStream, objectMetadata);
       return newFileName;
     } catch (IOException e) {
-      throw new UserCustomException(ErrorCode.FAIL_FILE_UPLOAD);
+      throw new CustomException(ErrorCode.FAIL_FILE_UPLOAD);
     }
   }
 
@@ -66,7 +66,7 @@ public class S3ImageUpload {
 
     String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
     if (!ALLOWED_EXTENSIONS.contains(extension)) {
-      throw new UserCustomException(ErrorCode.INVALID_FILE_FORMAT);
+      throw new CustomException(ErrorCode.INVALID_FILE_FORMAT);
     }
 
     return extention;

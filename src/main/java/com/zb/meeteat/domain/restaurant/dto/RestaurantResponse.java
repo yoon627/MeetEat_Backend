@@ -13,6 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RestaurantResponse {
+
   private Long id;
   private Long kakaomaps_id;
   private String place_name;

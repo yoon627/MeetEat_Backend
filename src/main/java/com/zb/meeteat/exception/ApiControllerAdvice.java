@@ -45,6 +45,7 @@ public class ApiControllerAdvice {
   @Getter
   @AllArgsConstructor
   public static class ExceptionResponse {
+
     private int status;
     private String message;
   }
