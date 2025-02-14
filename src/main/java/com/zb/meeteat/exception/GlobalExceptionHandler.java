@@ -44,14 +44,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<Map<String, Object>> handleCustomException(CustomException ex) {
-        ErrorCode errorCode = ex.getErrorCode();
+        UserErrorCode userErrorCode = ex.getUserErrorCode();
 
         Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("status", errorCode.getStatus().value());
-        errorResponse.put("error", errorCode.getCode());
-        errorResponse.put("message", errorCode.getMessage());
+        errorResponse.put("status", userErrorCode.getStatus().value());
+        errorResponse.put("error", userErrorCode.getCode());
+        errorResponse.put("message", userErrorCode.getMessage());
 
-        return ResponseEntity.status(errorCode.getStatus()).body(errorResponse);
+        return ResponseEntity.status(userErrorCode.getStatus()).body(errorResponse);
     }
 
 
