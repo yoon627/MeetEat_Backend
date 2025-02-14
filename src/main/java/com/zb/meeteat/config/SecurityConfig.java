@@ -58,7 +58,6 @@ public class SecurityConfig {
         "http://localhost:5173/**"); // 명확한 Origin 명시
     corsConfigurationV1.addAllowedOriginPattern(
         "https://meet-eat-frontend.vercel.app/**"); // 명확한 Origin 명시
-//    corsConfigurationV1.setAllowCredentials(true);
     corsConfigurationV1.addAllowedMethod("*");
     corsConfigurationV1.addAllowedHeader("*");
 
