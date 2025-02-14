@@ -2,6 +2,7 @@ package com.zb.meeteat.domain.restaurant.controller;
 
 import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequest;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
+import com.zb.meeteat.domain.restaurant.dto.RestaurantReviewsResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.service.RestaurantService;
@@ -50,7 +51,7 @@ public class RestaurantController {
   }
 
   @GetMapping("/{restaurantId}/reviews")
-  public ResponseEntity<Page<RestaurantReview>> getReviews(
+  public ResponseEntity<Page<RestaurantReviewsResponse>> getReviews(
       @PathVariable(name = "restaurantId") Long restaurantId,
       @RequestParam(name = "page", defaultValue = "1") int page,
       @RequestParam(name = "size", defaultValue = "10") int size) {

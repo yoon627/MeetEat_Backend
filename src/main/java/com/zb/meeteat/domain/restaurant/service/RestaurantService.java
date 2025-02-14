@@ -6,6 +6,7 @@ import com.zb.meeteat.domain.matching.entity.MatchingStatus;
 import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
 import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequest;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
+import com.zb.meeteat.domain.restaurant.dto.RestaurantReviewsResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantRepository;
@@ -86,7 +87,7 @@ public class RestaurantService {
     return restaurantRepository.getRestaurantById(restaurantId);
   }
 
-  public Page<RestaurantReview> getRestaurantReviews(
+  public Page<RestaurantReviewsResponse> getRestaurantReviews(
       Long restaurantId, int page, int size) {
 
     // Pageable 객체 생성 (페이지, 사이즈, 정렬 방식)
