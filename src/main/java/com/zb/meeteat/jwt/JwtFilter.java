@@ -3,7 +3,7 @@ package com.zb.meeteat.jwt;
 import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
 import com.zb.meeteat.exception.CustomException;
-import com.zb.meeteat.exception.ErrorCode;
+import com.zb.meeteat.exception.UserErrorCode;
 import com.zb.meeteat.security.UserDetailsImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -38,14 +38,14 @@ public class JwtFilter extends OncePerRequestFilter {
 
             // 1. 블랙리스트 체크
             if (jwtUtil.isBlacklisted(jwt)) {
-                throw new CustomException(ErrorCode.INVALID_TOKEN);
+                throw new CustomException(UserErrorCode.INVALID_TOKEN);
             }
 
             // 2. JWT 유효성 검사
             if (jwtUtil.validateToken(jwt)) {
                 Long userId = jwtUtil.getUserId(jwt); // 토큰에서 사용자 ID 가져오기
                 User user = userRepository.findById(userId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                        .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
                 // 3. SecurityContext에 인증 정보 저장
                 UserDetails userDetails = new UserDetailsImpl(user);
