@@ -19,15 +19,16 @@ import lombok.Setter;
 @Entity
 @Table(name = "restaurant")
 public class Restaurant {
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-  private Long kakaomaps_id;
-  private String place_name;
+  private Long kakaomapsId;
+  private String placeName;
   private String phone;
-  private double y;
-  private double x;
-  private String road_address_name;
-  private String category_name;
-  private double rating;
+  private Double y;
+  private Double x;
+  private String roadAddressName;
+  private String categoryName;
+  private Double rating;
 }

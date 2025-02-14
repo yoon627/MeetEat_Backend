@@ -1,7 +1,7 @@
 package com.zb.meeteat.domain.matching.entity;
 
-import com.zb.meeteat.type.MatchingStatus;
 import com.zb.meeteat.domain.restaurant.entity.Restaurant;
+import com.zb.meeteat.type.MatchingStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,9 +16,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -45,7 +45,6 @@ public class Matching {
   @Column(nullable = false)
   private MatchingStatus status;  // 매칭상태
 
-  private long restaurantId;
   @CreatedDate
   private LocalDateTime createdAt;  // 생성시간
 

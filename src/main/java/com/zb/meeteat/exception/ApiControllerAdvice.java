@@ -35,9 +35,9 @@ public class ApiControllerAdvice {
     ErrorCode errorCode = c.getErrorCode();
 
     return ResponseEntity
-        .status(errorCode.getHttpStatus())
+        .status(errorCode.getStatus())
         .body(new ExceptionResponse(
-            errorCode.getHttpStatus().value(),
+            errorCode.getStatus().value(),
             errorCode.getMessage()
         ));
   }
@@ -45,6 +45,7 @@ public class ApiControllerAdvice {
   @Getter
   @AllArgsConstructor
   public static class ExceptionResponse {
+
     private int status;
     private String message;
   }
