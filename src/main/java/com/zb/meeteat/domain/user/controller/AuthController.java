@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -73,6 +74,18 @@ public class AuthController {
   public ResponseEntity<Void> signout(@RequestHeader("Authorization") String token) {
     authService.signout(token);
     return ResponseEntity.ok().build();
+  }
+
+  // 회원 탈퇴
+  @DeleteMapping("/withdrawal")
+  public ResponseEntity<String> withdrawUser(
+      @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    log.info("회원 탈퇴 요청: {}", userDetails.getUsername());
+
+    userService.withdrawUser(userDetails.getUser());
+
+    return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
+
   }
 
   // 비밀번호 변경
