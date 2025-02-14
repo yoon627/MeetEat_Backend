@@ -19,10 +19,10 @@ public class MatchingDto {
   private int count;
   private MatchingStatus status;
   private RestaurantDto restaurant;
-  //List<UserDto>
+  //TODO List<UserDto>
 
   public static Matching toEntity(MatchingDto matchingDto) {
     return Matching.builder().count(matchingDto.getCount()).status(matchingDto.getStatus())
-        .restaurantId(matchingDto.getRestaurant().getId()).build();
+        .restaurant(RestaurantDto.toEntity(matchingDto.getRestaurant())).build();
   }
 }
