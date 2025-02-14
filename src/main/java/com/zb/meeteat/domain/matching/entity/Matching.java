@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "matching")
 public class Matching {
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;  // 매칭 모임 아이디

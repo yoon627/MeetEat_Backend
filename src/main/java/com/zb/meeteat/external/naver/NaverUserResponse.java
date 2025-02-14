@@ -6,13 +6,14 @@ import lombok.Getter;
 @Getter
 public class NaverUserResponse {
 
-    @JsonProperty("response")
-    private Response response;
+  @JsonProperty("response")
+  private Response response;
 
-    @Getter
-    public static class Response {
-        private String id;
-        private String email;
-        private String nickname;
-    }
+  @Getter
+  public static class Response {
+
+    private String id;
+    private String email;
+    private String nickname;
+  }
 }

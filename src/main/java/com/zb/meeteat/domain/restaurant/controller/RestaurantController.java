@@ -5,7 +5,7 @@ import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.service.RestaurantService;
-import com.zb.meeteat.exception.CustomException;
+import com.zb.meeteat.exception.UserCustomException;
 import com.zb.meeteat.jwt.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/restaurants")
 public class RestaurantController {
+
   private final RestaurantService restaurantService;
   private final JwtUtil jwtUtil;
 
@@ -59,9 +60,9 @@ public class RestaurantController {
   }
 
   @PostMapping("/review")
-  public ResponseEntity createReview (
+  public ResponseEntity createReview(
       @RequestHeader("Authorization") String token,
-      @ModelAttribute @Valid CreateReviewRequest req) throws CustomException {
+      @ModelAttribute @Valid CreateReviewRequest req) throws UserCustomException {
     // 토큰에서 userId 추출
     long userId = jwtUtil.getUserId(token.replace("Bearer ", "")); // "Bearer "를 제거하고 토큰을 전달
 
@@ -77,6 +78,7 @@ public class RestaurantController {
   ) {
 
     jwtUtil.validateToken(token);
-    return ResponseEntity.ok(restaurantService.getMyReviewByMatching(Long.parseLong(matchingHistoryId)));
+    return ResponseEntity.ok(
+        restaurantService.getMyReviewByMatching(Long.parseLong(matchingHistoryId)));
   }
 }

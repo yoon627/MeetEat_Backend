@@ -25,6 +25,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "matchinghistory")
 public class MatchingHistory {
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;  // 매칭 내역 아이디

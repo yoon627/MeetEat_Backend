@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AuthCodeRequestDto {
 
-    @NotBlank(message = "authCode는 필수 입력 항목입니다.")
-    private String authCode;
+  @NotBlank(message = "authCode는 필수 입력 항목입니다.")
+  private String authCode;
 
-    public AuthCodeRequestDto(String authCode) {
-        this.authCode = authCode;
-    }
+  public AuthCodeRequestDto(String authCode) {
+    this.authCode = authCode;
+  }
 }

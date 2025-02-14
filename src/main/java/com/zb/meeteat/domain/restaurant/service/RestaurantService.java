@@ -14,11 +14,7 @@ import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
 import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.exception.ErrorCode;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import com.zb.meeteat.exception.UserCustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,6 +22,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -93,7 +95,8 @@ public class RestaurantService {
     return restaurantReviewRepository.getRestaurantReviewByRestaurantId(restaurantId, pageable);
   }
 
-  public RestaurantReview createReview(Long userId, CreateReviewRequest req) throws CustomException {
+  public RestaurantReview createReview(Long userId, CreateReviewRequest req)
+      throws UserCustomException {
 
     // 1. user 정보 가져오기
     User user = userRepository.findById(userId)

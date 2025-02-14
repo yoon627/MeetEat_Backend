@@ -19,6 +19,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "restaurant")
 public class Restaurant {
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
