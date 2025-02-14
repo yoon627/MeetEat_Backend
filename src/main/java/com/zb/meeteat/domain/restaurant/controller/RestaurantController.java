@@ -6,7 +6,7 @@ import com.zb.meeteat.domain.restaurant.dto.RestaurantReviewsResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.service.RestaurantService;
-import com.zb.meeteat.exception.UserCustomException;
+import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.jwt.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -63,7 +63,7 @@ public class RestaurantController {
   @PostMapping("/review")
   public ResponseEntity createReview(
       @RequestHeader("Authorization") String token,
-      @ModelAttribute @Valid CreateReviewRequest req) throws UserCustomException {
+      @ModelAttribute @Valid CreateReviewRequest req) throws CustomException {
     // 토큰에서 userId 추출
     long userId = jwtUtil.getUserId(token.replace("Bearer ", "")); // "Bearer "를 제거하고 토큰을 전달
 

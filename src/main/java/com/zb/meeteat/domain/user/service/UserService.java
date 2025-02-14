@@ -3,8 +3,8 @@ package com.zb.meeteat.domain.user.service;
 import com.zb.meeteat.domain.user.dto.UserProfileResponse;
 import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
-import com.zb.meeteat.exception.UserCustomException;
-import com.zb.meeteat.exception.UserErrorCode;
+import com.zb.meeteat.exception.CustomException;
+import com.zb.meeteat.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +18,7 @@ public class UserService {
   @Transactional
   public UserProfileResponse getUserProfile(Long userId) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new UserCustomException(UserErrorCode.USER_NOT_FOUND));
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
     return new UserProfileResponse(
         user.getId(),
@@ -39,7 +39,7 @@ public class UserService {
   public void updateNickname(User user, String newNickname) {
     // 닉네임 중복 검사
     if (userRepository.existsByNickname(newNickname)) {
-      throw new UserCustomException(UserErrorCode.NICKNAME_ALREADY_REGISTERED);
+      throw new CustomException(ErrorCode.NICKNAME_ALREADY_REGISTERED);
     }
 
     // 닉네임 변경

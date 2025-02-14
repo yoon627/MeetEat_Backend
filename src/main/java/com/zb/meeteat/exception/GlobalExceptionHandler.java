@@ -43,16 +43,16 @@ public class GlobalExceptionHandler {
         .body("서버에 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
   }
 
-  @ExceptionHandler(UserCustomException.class)
-  public ResponseEntity<Map<String, Object>> handleCustomException(UserCustomException ex) {
-    UserErrorCode userErrorCode = ex.getUserErrorCode();
+  @ExceptionHandler(CustomException.class)
+  public ResponseEntity<Map<String, Object>> handleCustomException(CustomException ex) {
+    ErrorCode errorCode = ex.getErrorCode();
 
     Map<String, Object> errorResponse = new HashMap<>();
-    errorResponse.put("status", userErrorCode.getStatus().value());
-    errorResponse.put("error", userErrorCode.getCode());
-    errorResponse.put("message", userErrorCode.getMessage());
+    errorResponse.put("status", errorCode.getStatus().value());
+    errorResponse.put("error", errorCode.getCode());
+    errorResponse.put("message", errorCode.getMessage());
 
-    return ResponseEntity.status(userErrorCode.getStatus()).body(errorResponse);
+    return ResponseEntity.status(errorCode.getStatus()).body(errorResponse);
   }
 
 
