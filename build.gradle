@@ -37,6 +37,9 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.14.0'
     // Bouncy Castle 암호화 라이브러리
     implementation 'org.bouncycastle:bcprov-jdk18on:1.78'
+    
+    implementation "org.springframework.boot:spring-boot-starter-hateoas"
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
     implementation 'com.mysql:mysql-connector-j'
     compileOnly 'org.projectlombok:lombok'

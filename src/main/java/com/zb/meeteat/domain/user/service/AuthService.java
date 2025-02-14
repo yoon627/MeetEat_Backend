@@ -8,12 +8,11 @@ import com.zb.meeteat.domain.user.entity.Role;
 import com.zb.meeteat.domain.user.entity.SignUpType;
 import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
-import com.zb.meeteat.exception.CustomException;
+import com.zb.meeteat.exception.UserCustomException;
 import com.zb.meeteat.exception.UserErrorCode;
 import com.zb.meeteat.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,16 +56,16 @@ public class AuthService {
     public AuthCodeResponseDto signin(SigninRequestDto request) {
         // 1. 이메일로 사용자 찾기
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new UserCustomException(UserErrorCode.USER_NOT_FOUND));
 
         // 2. 탈퇴 예정 계정인지 확인 (`isPenalty`가 true면 탈퇴 예정 상태)
         if (user.getIsPenalty()) {
-            throw new CustomException(UserErrorCode.USER_SCHEDULED_FOR_DELETION);
+            throw new UserCustomException(UserErrorCode.USER_SCHEDULED_FOR_DELETION);
         }
 
         // 3. 비밀번호 검증
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new CustomException(UserErrorCode.INVALID_CREDENTIALS);
+            throw new UserCustomException(UserErrorCode.INVALID_CREDENTIALS);
         }
 
         // 4. JWT 토큰 생성
@@ -82,7 +81,7 @@ public class AuthService {
         String jwt = token.replace("Bearer ", "");
 
         if (!jwtUtil.validateToken(jwt)) {
-            throw new CustomException(UserErrorCode.INVALID_TOKEN);
+            throw new UserCustomException(UserErrorCode.INVALID_TOKEN);
         }
 
         jwtUtil.blacklistToken(jwt);
@@ -92,12 +91,12 @@ public class AuthService {
     public void changePassword(User user, ChangePasswordRequest request) {
         // 1. 현재 비밀번호 검증
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            throw new CustomException(UserErrorCode.PASSWORD_MISMATCH);
+            throw new UserCustomException(UserErrorCode.PASSWORD_MISMATCH);
         }
 
         // 2. 새 비밀번호가 현재 비밀번호와 동일한지 체크
         if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
-            throw new CustomException(UserErrorCode.SAME_PASSWORD);
+            throw new UserCustomException(UserErrorCode.SAME_PASSWORD);
         }
 
         // 3. 비밀번호 변경 후 저장

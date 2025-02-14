@@ -42,8 +42,8 @@ public class GlobalExceptionHandler {
                 .body("서버에 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     }
 
-    @ExceptionHandler(CustomException.class)
-    public ResponseEntity<Map<String, Object>> handleCustomException(CustomException ex) {
+    @ExceptionHandler(UserCustomException.class)
+    public ResponseEntity<Map<String, Object>> handleCustomException(UserCustomException ex) {
         UserErrorCode userErrorCode = ex.getUserErrorCode();
 
         Map<String, Object> errorResponse = new HashMap<>();
