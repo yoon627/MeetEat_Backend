@@ -26,8 +26,8 @@ public class Restaurant {
   private Long kakaomapsId;
   private String placeName;
   private String phone;
-  private Double y;
-  private Double x;
+  private Double y;//lat
+  private Double x;//lon
   private String roadAddressName;
   private String categoryName;
   private Double rating;

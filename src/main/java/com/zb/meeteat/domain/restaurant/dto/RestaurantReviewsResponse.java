@@ -1,6 +1,6 @@
 package com.zb.meeteat.domain.restaurant.dto;
 
-
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,16 +12,11 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RestaurantResponse {
-
+public class RestaurantReviewsResponse {
   private Long id;
-  private Long kakaomaps_id;
-  private String place_name;
-  private String phone;
-  private double y;
-  private double x;
-  private String road_address_name;
-  private String category_name;
   private double rating;
-  private String thumbnail;
+  private String description;
+  private String imgUrl;
+  private String nickname;
+  private String createdAt;
 }

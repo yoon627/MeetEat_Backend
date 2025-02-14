@@ -2,6 +2,7 @@ package com.zb.meeteat.domain.restaurant.controller;
 
 import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequest;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
+import com.zb.meeteat.domain.restaurant.dto.RestaurantReviewsResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.service.RestaurantService;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/restaurants")
 public class RestaurantController {
+
   private final RestaurantService restaurantService;
   private final JwtUtil jwtUtil;
 
@@ -49,7 +51,7 @@ public class RestaurantController {
   }
 
   @GetMapping("/{restaurantId}/reviews")
-  public ResponseEntity<Page<RestaurantReview>> getReviews(
+  public ResponseEntity<Page<RestaurantReviewsResponse>> getReviews(
       @PathVariable(name = "restaurantId") Long restaurantId,
       @RequestParam(name = "page", defaultValue = "1") int page,
       @RequestParam(name = "size", defaultValue = "10") int size) {
@@ -59,7 +61,7 @@ public class RestaurantController {
   }
 
   @PostMapping("/review")
-  public ResponseEntity createReview (
+  public ResponseEntity createReview(
       @RequestHeader("Authorization") String token,
       @ModelAttribute @Valid CreateReviewRequest req) throws CustomException {
     // 토큰에서 userId 추출
@@ -77,6 +79,7 @@ public class RestaurantController {
   ) {
 
     jwtUtil.validateToken(token);
-    return ResponseEntity.ok(restaurantService.getMyReviewByMatching(Long.parseLong(matchingHistoryId)));
+    return ResponseEntity.ok(
+        restaurantService.getMyReviewByMatching(Long.parseLong(matchingHistoryId)));
   }
 }

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AwsS3Config {
+
   // S3를 등록한 사람이 전달받은 접속하기 위한 key 값
   @Value("${cloud.aws.credentials.access-key}")
   private String accessKey;

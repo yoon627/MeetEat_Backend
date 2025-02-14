@@ -6,12 +6,13 @@ import lombok.Getter;
 @Getter
 public class KakaoUserResponse {
 
-    @JsonProperty("kakao_account")
-    private KakaoAccount kakaoAccount;
+  @JsonProperty("kakao_account")
+  private KakaoAccount kakaoAccount;
 
-    @Getter
-    public static class KakaoAccount {
-        private String email;
-        private String nickname;
-    }
+  @Getter
+  public static class KakaoAccount {
+
+    private String email;
+    private String nickname;
+  }
 }
