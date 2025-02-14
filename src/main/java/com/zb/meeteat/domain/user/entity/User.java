@@ -14,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "user", uniqueConstraints = {
+@Table(name = "`user`", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email"),
         @UniqueConstraint(columnNames = "nickname")
 })
@@ -33,6 +33,7 @@ public class User {
     @Column(nullable = false, unique = false)
     private String nickname;
 
+    @Column(length = 50)
     private String introduce;
 
     @Enumerated(EnumType.STRING)
@@ -118,6 +119,16 @@ public class User {
                 .signupType(SignUpType.NAVER)
                 .role(Role.USER)
                 .build();
+    }
+
+    public void updateNickname(String newNickname) {
+        this.nickname = newNickname;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateIntroduce(String newIntroduce) {
+        this.introduce = newIntroduce;
+        this.updatedAt = LocalDateTime.now();
     }
 
 

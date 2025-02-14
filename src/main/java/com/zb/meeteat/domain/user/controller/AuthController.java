@@ -1,11 +1,9 @@
 package com.zb.meeteat.domain.user.controller;
 
-import com.zb.meeteat.domain.user.dto.AuthCodeResponseDto;
-import com.zb.meeteat.domain.user.dto.ChangePasswordRequest;
-import com.zb.meeteat.domain.user.dto.SigninRequestDto;
-import com.zb.meeteat.domain.user.dto.SignupRequestDto;
+import com.zb.meeteat.domain.user.dto.*;
 import com.zb.meeteat.domain.user.service.AuthService;
 import com.zb.meeteat.domain.user.service.SocialAuthService;
+import com.zb.meeteat.domain.user.service.UserService;
 import com.zb.meeteat.security.UserDetailsImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +23,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final SocialAuthService socialAuthService;
+    private final UserService userService;
 
     // 회원가입
     @PostMapping("/signup")
@@ -81,4 +80,34 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "비밀번호가 성공적으로 변경되었습니다."));
     }
 
+    // 프로필 조회
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileResponse> getProfile(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        UserProfileResponse profile = userService.getUserProfile(userDetails.getUser().getId());
+        return ResponseEntity.ok(profile);
+    }
+
+    // 닉네임 변경
+    @PatchMapping("/profile/nickname")
+    public ResponseEntity<String> updateNickname(
+            @Valid @RequestBody UpdateNicknameRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        userService.updateNickname(userDetails.getUser(), request.getNickname());
+        return ResponseEntity.ok("닉네임이 성공적으로 변경되었습니다.");
+    }
+
+    // 한줄 소개 변경
+    @PatchMapping("/profile/introduce")
+    public ResponseEntity<String> updateIntroduce(
+            @Valid @RequestBody UpdateIntroduceRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        userService.updateIntroduce(userDetails.getUser(), request.getIntroduce());
+        return ResponseEntity.ok("한줄 소개가 성공적으로 변경되었습니다.");
+    }
+
+
 }
+
