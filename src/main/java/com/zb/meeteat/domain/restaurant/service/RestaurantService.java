@@ -54,13 +54,13 @@ public class RestaurantService {
     Page<RestaurantResponse> restaurants = Page.empty();
 
 
-    if (Sort.RATING.equals(search.getSorted())) {
+    if (Sort.RATING.equals(search.getSort())) {
       restaurants = restaurantRepository.getRestaurantByRegionAndPlaceNameAndCategoryNameOrderByRatingDesc(
           search.getRegion().toString(),
           search.getPlaceName(),
           categoryName,
           pageable);
-    } else if (Sort.DISTANCE.equals(search.getSorted())) {
+    } else if (Sort.DISTANCE.equals(search.getSort())) {
       if (Double.isNaN(search.getUserX()) || Double.isNaN(search.getUserX())) {
         throw new CustomException(ErrorCode.USER_LOCATION_NOT_PROVIDED);
       }
