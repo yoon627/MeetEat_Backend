@@ -14,7 +14,7 @@ public enum ErrorCode {
   NICKNAME_ALREADY_REGISTERED(HttpStatus.BAD_REQUEST, "NICKNAME_ALREADY_REGISTERED", "이미 사용 중인 닉네임입니다."),
   USER_SCHEDULED_FOR_DELETION(HttpStatus.FORBIDDEN, "USER_SCHEDULED_FOR_DELETION", "해당 계정은 탈퇴 예정 상태입니다."),
   SAME_PASSWORD(HttpStatus.BAD_REQUEST, "SAME_PASSWORD", "현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다."),
-  USER_CANNOT_BE_DELETED_DUE_TO_MATCHING(HttpStatus.BAD_REQUEST, "USER_CANNOT_BE_DELETED_DUE_TO_MATCHING", " 현재 매칭 진행 중이므로 탈퇴할 수 없습니다."),
+  USER_HAS_ONGOING_MATCHING(HttpStatus.BAD_REQUEST, "USER_HAS_ONGOING_MATCHING", "현재 진행 중인 매칭이 있어 탈퇴할 수 없습니다."),
   PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "PASSWORD_MISMATCH", "현재 비밀번호가 일치하지 않습니다."),
   INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "INVALID_PASSWORD", "비밀번호는 최소 8자 이상이며, 영문, 숫자, 특수문자를 각각 하나 이상 포함해야 합니다."),
   INVALID_TOKEN(HttpStatus.BAD_REQUEST, "INVALID_TOKEN", "유효하지 않은 토큰입니다."),
