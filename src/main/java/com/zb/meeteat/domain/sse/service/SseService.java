@@ -67,7 +67,7 @@ public class SseService {
   }
 
   public void sendTempTeamJoinEvent(Long userId, JoinRequestDto joinRequestDto) {
-    if (userId != joinRequestDto.getUserId()) {
+    if (userId == joinRequestDto.getUserId()) {
       return;
     }
     SseEmitter emitter = sseEmitterMap.get(userId);
