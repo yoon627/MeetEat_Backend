@@ -32,7 +32,7 @@ public class MatchingService {
   private final SseService sseService;
   private final RedisService redisService;
   private final MatchingRepository matchingRepository;
-  private final int MAX_SEARCHING_TIME = 100;
+  private final int MAX_SEARCH_COUNT = 100;
   private final Set<Long> cancelledUserSet = ConcurrentHashMap.newKeySet();//취소한 유저가 계산되고 있는 경우를 체크하기 위해
   private final PriorityQueue<Integer> teamIdPq = new PriorityQueue<>();
   private final Map<String, List<MatchingRequestDto>> tempTeamMap = new ConcurrentHashMap<>();
@@ -46,6 +46,7 @@ public class MatchingService {
 
   public void requestMatching(MatchingRequestDto matchingRequestDto) {
     long userId = authService.getLoggedInUserId();
+    log.info("Matching requested: " + userId);
     log.info("매칭 요청 도착: userId={}, matchingRequestDto={}", userId, matchingRequestDto);
     matchingRequestDto.setUserId(userId);
     redisService.addMatchingQueue(matchingRequestDto);
@@ -68,8 +69,8 @@ public class MatchingService {
       team.add(user);
       log.info("임시 팀 생성 시작: 기준 userId={}", user.getUserId());
       int cnt = 0;
-      while (!redisService.isMatchingQueueEmpty() && cnt++ < MAX_SEARCHING_TIME
-          || team.size() < user.getGroupSize()) {
+      while (!redisService.isMatchingQueueEmpty() && cnt++ < MAX_SEARCH_COUNT
+          && team.size() < user.getGroupSize()) {
         MatchingRequestDto candidate = redisService.leftPopMatchingQueue();
         log.info("임시 팀 생성 중: 기준 userId={}, candidate={}", user.getUserId(), candidate.getUserId());
         if (cancelledUserSet.contains(candidate.getUserId())) {
@@ -173,10 +174,11 @@ public class MatchingService {
   }
 
   private boolean checkCondition(MatchingRequestDto member1, MatchingRequestDto member2) {
-    if (member1.getGroupSize() != member2.getGroupSize()) {
-      return false;
-    }
-    return checkDistanceCondition(member1, member2);
+//    if (member1.getGroupSize() != member2.getGroupSize()) {
+//      return false;
+//    }
+//    return checkDistanceCondition(member1, member2);
+    return true;
   }
 
   private boolean checkDistanceCondition(MatchingRequestDto member1, MatchingRequestDto member2) {
