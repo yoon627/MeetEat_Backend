@@ -14,9 +14,12 @@ import com.zb.meeteat.exception.ErrorCode;
 import com.zb.meeteat.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class AuthService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtUtil jwtUtil;
+  private final RedisTemplate<String, String> redisTemplate;
 
   @Transactional
   public User signup(SignupRequestDto requestDto) {
@@ -73,9 +77,17 @@ public class AuthService {
     String accessToken = jwtUtil.generateToken(user);
 
     // 5. 프로필 업데이트 필요 여부 확인 (닉네임이 없거나 비어있는 경우 true)
-    boolean needProfileUpdate = user.isProfileIncomplete();
-    return new AuthCodeResponseDto(accessToken, needProfileUpdate);
+    String key = "firstLogin:" + user.getId();
+    Boolean isNew = redisTemplate.opsForValue().setIfAbsent(key, "true");
+
+    // 6. 첫 로그인 여부에 따라 응답 객체 다르게 반환
+    if (isNew != null && isNew) {
+      return new AuthCodeResponseDto(accessToken, true);
+    } else {
+      return new AuthCodeResponseDto(accessToken);
+    }
   }
+
 
   @Transactional
   public void signout(String token) {
