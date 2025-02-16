@@ -6,6 +6,7 @@ import com.zb.meeteat.domain.matching.entity.MatchingStatus;
 import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
 import com.zb.meeteat.domain.restaurant.dto.Category;
 import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequest;
+import com.zb.meeteat.domain.restaurant.dto.RestaurantMyReviewResponse;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantReviewsResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
@@ -54,7 +55,6 @@ public class RestaurantService {
 
     // 정렬 기준에 따라 쿼리 메소드 실행
     Page<RestaurantResponse> restaurants = Page.empty();
-
 
     if (Sort.RATING.equals(search.getSorted())) {
       restaurants = restaurantRepository.getRestaurantByRegionAndPlaceNameAndCategoryNameOrderByRatingDesc(
@@ -153,9 +153,13 @@ public class RestaurantService {
     updateRestaurantRating(matching.getRestaurant());
   }
 
-  public RestaurantReview getMyReviewByMatching(Long matchingHistoryId) {
+  public RestaurantMyReviewResponse getMyReviewByMatching(Long matchingHistoryId, Long userId) {
     MatchingHistory history = matchingHistoryRepository.findById(matchingHistoryId)
         .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
+
+    if (!userId.equals(history.getUserId())) {
+      throw new CustomException(ErrorCode.BAD_REQUEST);
+    }
 
     Matching matching = history.getMatching();
     if (history.getStatus().equals(MatchingStatus.CANCELED) ||
@@ -163,7 +167,20 @@ public class RestaurantService {
       throw new CustomException(ErrorCode.CANCELED_MATCHING);
     }
 
-    return restaurantReviewRepository.findRestaurantReviewByMatchingHistoryId(matchingHistoryId);
+    RestaurantReview myReview = restaurantReviewRepository.findRestaurantReviewByMatchingHistoryId(matchingHistoryId);
+
+    if (myReview == null) {
+      return new RestaurantMyReviewResponse();
+    }
+
+    return RestaurantMyReviewResponse.builder()
+        .id(myReview.getId())
+        .rating(myReview.getRating())
+        .description(myReview.getDescription())
+        .imageUrl(myReview.getImgUrl())
+        .nickName(myReview.getUser().getNickname())
+        .createdAt(myReview.getCreatedAt())
+        .build();
   }
 
   private String saveImage(MultipartFile[] files) {
