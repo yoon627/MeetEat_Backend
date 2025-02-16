@@ -6,10 +6,12 @@ import com.zb.meeteat.domain.matching.entity.MatchingStatus;
 import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
 import com.zb.meeteat.domain.restaurant.dto.Category;
 import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequest;
+import com.zb.meeteat.domain.restaurant.dto.RestaurantMyReviewResponse;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantReviewsResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.dto.Sort;
+import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantRepository;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantReviewRepository;
@@ -28,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
@@ -53,14 +56,13 @@ public class RestaurantService {
     // 정렬 기준에 따라 쿼리 메소드 실행
     Page<RestaurantResponse> restaurants = Page.empty();
 
-
-    if (Sort.RATING.equals(search.getSort())) {
+    if (Sort.RATING.equals(search.getSorted())) {
       restaurants = restaurantRepository.getRestaurantByRegionAndPlaceNameAndCategoryNameOrderByRatingDesc(
           search.getRegion().toString(),
           search.getPlaceName(),
           categoryName,
           pageable);
-    } else if (Sort.DISTANCE.equals(search.getSort())) {
+    } else if (Sort.DISTANCE.equals(search.getSorted())) {
       if (Double.isNaN(search.getUserX()) || Double.isNaN(search.getUserX())) {
         throw new CustomException(ErrorCode.USER_LOCATION_NOT_PROVIDED);
       }
@@ -84,7 +86,17 @@ public class RestaurantService {
   }
 
   public RestaurantResponse getRestaurant(Long restaurantId) {
-    return restaurantRepository.getRestaurantById(restaurantId);
+
+    Restaurant restaurant = restaurantRepository.findById(restaurantId).orElse(null);
+
+    if (restaurant == null) {
+      return new RestaurantResponse();
+    }
+
+    // 리뷰이미지가 있는 최신리뷰 가지고 오기
+    RestaurantReview lastedReview = restaurantReviewRepository.findTop1ByRestaurantOrderByImgUrlDesc(restaurant);
+
+    return RestaurantResponse.fromRestaurant(restaurant, lastedReview.getImgUrl());
   }
 
   public Page<RestaurantReviewsResponse> getRestaurantReviews(
@@ -96,7 +108,8 @@ public class RestaurantService {
     return restaurantReviewRepository.getRestaurantReviewByRestaurantId(restaurantId, pageable);
   }
 
-  public RestaurantReview createReview(Long userId, CreateReviewRequest req)
+  @Transactional
+  public void createReview(Long userId, CreateReviewRequest req)
       throws CustomException {
 
     // 1. user 정보 가져오기
@@ -134,12 +147,19 @@ public class RestaurantService {
         .restaurant(matching.getRestaurant())
         .build();
 
-    return restaurantReviewRepository.save(review);
+    restaurantReviewRepository.save(review);
+
+    // 6. 식당 평점 변경
+    updateRestaurantRating(matching.getRestaurant());
   }
 
-  public RestaurantReview getMyReviewByMatching(Long matchingHistoryId) {
+  public RestaurantMyReviewResponse getMyReviewByMatching(Long matchingHistoryId, Long userId) {
     MatchingHistory history = matchingHistoryRepository.findById(matchingHistoryId)
         .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
+
+    if (!userId.equals(history.getUserId())) {
+      throw new CustomException(ErrorCode.BAD_REQUEST);
+    }
 
     Matching matching = history.getMatching();
     if (history.getStatus().equals(MatchingStatus.CANCELED) ||
@@ -147,7 +167,20 @@ public class RestaurantService {
       throw new CustomException(ErrorCode.CANCELED_MATCHING);
     }
 
-    return restaurantReviewRepository.findRestaurantReviewByMatchingHistoryId(matchingHistoryId);
+    RestaurantReview myReview = restaurantReviewRepository.findRestaurantReviewByMatchingHistoryId(matchingHistoryId);
+
+    if (myReview == null) {
+      return new RestaurantMyReviewResponse();
+    }
+
+    return RestaurantMyReviewResponse.builder()
+        .id(myReview.getId())
+        .rating(myReview.getRating())
+        .description(myReview.getDescription())
+        .imageUrl(myReview.getImgUrl())
+        .nickName(myReview.getUser().getNickname())
+        .createdAt(myReview.getCreatedAt())
+        .build();
   }
 
   private String saveImage(MultipartFile[] files) {
@@ -164,6 +197,17 @@ public class RestaurantService {
     }
 
     return String.join(",", imgUrlList);
+  }
+
+  private void updateRestaurantRating(Restaurant restaurant) {
+    List<RestaurantReview> reviews = restaurantReviewRepository.findAllByRestaurant(restaurant);
+    Double avgRating = reviews.stream()
+        .mapToInt(RestaurantReview::getRating)
+        .average()
+        .orElse(0.0);
+
+    restaurant.setRating(avgRating);
+    restaurantRepository.save(restaurant);
   }
 
 }

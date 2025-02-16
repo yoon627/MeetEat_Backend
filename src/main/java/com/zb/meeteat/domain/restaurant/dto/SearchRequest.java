@@ -31,7 +31,7 @@ public class SearchRequest {
   private double userX;
 
   @NotNull(message = "유효하지 않은 정렬입니다.")
-  private Sort sort; // RATING : 평점순(내림차순), DISTANCE: 거리순(오름차순)
+  private Sort sorted; // RATING : 평점순(내림차순), DISTANCE: 거리순(오름차순)
 
   @Min(value = 0, message = "페이지는 0이상 가능합니다")
   private int page;
