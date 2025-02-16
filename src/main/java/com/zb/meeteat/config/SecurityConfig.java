@@ -12,10 +12,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * 보안 설정을 위한 클래스 비밀번호 암호화를 위해 BCryptPasswordEncoder를 빈으로 등록
@@ -26,6 +26,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+  private final JwtFilter jwtFilter;
+
   /**
    * 비밀번호를 안전하게 암호화하기 위한 PasswordEncoder 빈 등록
    *
@@ -35,19 +37,22 @@ public class SecurityConfig {
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
-  private final JwtFilter jwtFilter;
-
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
+    http.cors(cors -> cors
+            .configurationSource(corsConfigurationSource())
+        )
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers(HttpMethod.POST, "/api/users/signup", "/api/users/signin",
                 "/api/users/signin/*", "api/restaurants/search", "api/restaurants/*").permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/users/change-password").authenticated() // 인증 필요
+            .requestMatchers(HttpMethod.POST, "/api/users/change-password", "/api/matching/request",
+                "/api/matching/join", "/api/matching/cancel")
+            .authenticated() // 인증 필요
+            .requestMatchers(HttpMethod.GET, "/api/sse/subscribe").authenticated()
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
@@ -75,6 +80,8 @@ public class SecurityConfig {
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", corsConfigurationV1);
     source.registerCorsConfiguration("/api/**", corsConfigurationV1);
+    source.registerCorsConfiguration("/api/sse/**", corsConfigurationV1);
+    source.registerCorsConfiguration("/api/matching/**", corsConfigurationV1);
 
     return source;
   }
