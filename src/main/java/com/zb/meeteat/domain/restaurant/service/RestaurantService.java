@@ -10,6 +10,7 @@ import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantReviewsResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.dto.Sort;
+import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantRepository;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantReviewRepository;
@@ -54,13 +55,13 @@ public class RestaurantService {
     Page<RestaurantResponse> restaurants = Page.empty();
 
 
-    if (Sort.RATING.equals(search.getSort())) {
+    if (Sort.RATING.equals(search.getSorted())) {
       restaurants = restaurantRepository.getRestaurantByRegionAndPlaceNameAndCategoryNameOrderByRatingDesc(
           search.getRegion().toString(),
           search.getPlaceName(),
           categoryName,
           pageable);
-    } else if (Sort.DISTANCE.equals(search.getSort())) {
+    } else if (Sort.DISTANCE.equals(search.getSorted())) {
       if (Double.isNaN(search.getUserX()) || Double.isNaN(search.getUserX())) {
         throw new CustomException(ErrorCode.USER_LOCATION_NOT_PROVIDED);
       }
@@ -84,7 +85,17 @@ public class RestaurantService {
   }
 
   public RestaurantResponse getRestaurant(Long restaurantId) {
-    return restaurantRepository.getRestaurantById(restaurantId);
+
+    Restaurant restaurant = restaurantRepository.findById(restaurantId).orElse(null);
+
+    if (restaurant == null) {
+      return new RestaurantResponse();
+    }
+
+    // 리뷰이미지가 있는 최신리뷰 가지고 오기
+    RestaurantReview lastedReview = restaurantReviewRepository.findTop1ByRestaurantOrderByImgUrlDesc(restaurant);
+
+    return RestaurantResponse.fromRestaurant(restaurant, lastedReview.getImgUrl());
   }
 
   public Page<RestaurantReviewsResponse> getRestaurantReviews(
