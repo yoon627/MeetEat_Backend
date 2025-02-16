@@ -3,6 +3,7 @@ package com.zb.meeteat.domain.restaurant.repository;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantReviewsResponse;
 import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,4 +26,6 @@ public interface RestaurantReviewRepository extends JpaRepository<RestaurantRevi
   RestaurantReview findRestaurantReviewByMatchingHistoryId(Long matchingHistoryId);
 
   RestaurantReview findTop1ByRestaurantOrderByImgUrlDesc(Restaurant restaurant);
+
+  List<RestaurantReview> findAllByRestaurant(Restaurant restaurant);
 }

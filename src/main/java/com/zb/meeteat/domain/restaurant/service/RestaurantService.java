@@ -29,6 +29,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
@@ -107,7 +108,8 @@ public class RestaurantService {
     return restaurantReviewRepository.getRestaurantReviewByRestaurantId(restaurantId, pageable);
   }
 
-  public RestaurantReview createReview(Long userId, CreateReviewRequest req)
+  @Transactional
+  public void createReview(Long userId, CreateReviewRequest req)
       throws CustomException {
 
     // 1. user 정보 가져오기
@@ -145,7 +147,10 @@ public class RestaurantService {
         .restaurant(matching.getRestaurant())
         .build();
 
-    return restaurantReviewRepository.save(review);
+    restaurantReviewRepository.save(review);
+
+    // 6. 식당 평점 변경
+    updateRestaurantRating(matching.getRestaurant());
   }
 
   public RestaurantReview getMyReviewByMatching(Long matchingHistoryId) {
@@ -175,6 +180,17 @@ public class RestaurantService {
     }
 
     return String.join(",", imgUrlList);
+  }
+
+  private void updateRestaurantRating(Restaurant restaurant) {
+    List<RestaurantReview> reviews = restaurantReviewRepository.findAllByRestaurant(restaurant);
+    Double avgRating = reviews.stream()
+        .mapToInt(RestaurantReview::getRating)
+        .average()
+        .orElse(0.0);
+
+    restaurant.setRating(avgRating);
+    restaurantRepository.save(restaurant);
   }
 
 }
