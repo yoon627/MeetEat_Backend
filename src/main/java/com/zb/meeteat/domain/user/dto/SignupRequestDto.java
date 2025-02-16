@@ -18,7 +18,7 @@ public class SignupRequestDto {
   private String email;
 
   @NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
-  @Size(min = 8)
+  @Size(min = 8, max = 16)
   @Pattern(
       regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[\\p{Punct}\\p{S}&&[^\\p{So}]]).{8,}$",
       message = "비밀번호는 최소 8자 이상이며, 영문, 숫자, 특수문자를 각각 하나 이상 포함해야 합니다."
@@ -26,6 +26,7 @@ public class SignupRequestDto {
   private String password;
 
   @NotBlank(message = "닉네임은 필수 입력 항목입니다.")
+  @Pattern(regexp = "^[^\\s]+$", message = "닉네임에는 공백이 포함될 수 없습니다.")
   private String nickname;
 
 }

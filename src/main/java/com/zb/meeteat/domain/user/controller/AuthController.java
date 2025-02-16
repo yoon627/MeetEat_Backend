@@ -41,7 +41,7 @@ public class AuthController {
   @PostMapping("/signup")
   public ResponseEntity<String> signup(@Valid @RequestBody SignupRequestDto requestDto) {
     authService.signup(requestDto);
-    return ResponseEntity.ok("회원가입 성공");
+    return ResponseEntity.ok().build();
   }
 
   // 이메일 로그인
@@ -84,7 +84,7 @@ public class AuthController {
 
     userService.withdrawUser(userDetails.getUser());
 
-    return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
+    return ResponseEntity.ok().build();
 
   }
 
@@ -102,7 +102,7 @@ public class AuthController {
     assert userDetails != null;
     authService.changePassword(userDetails.getUser(), request);
 
-    return ResponseEntity.ok(Map.of("message", "비밀번호가 성공적으로 변경되었습니다."));
+    return ResponseEntity.ok().build();
   }
 
   // 프로필 조회
@@ -120,7 +120,7 @@ public class AuthController {
       @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
     userService.updateNickname(userDetails.getUser(), request.getNickname());
-    return ResponseEntity.ok("닉네임이 성공적으로 변경되었습니다.");
+    return ResponseEntity.ok().build();
   }
 
   // 한줄 소개 변경
@@ -130,7 +130,7 @@ public class AuthController {
       @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
     userService.updateIntroduce(userDetails.getUser(), request.getIntroduce());
-    return ResponseEntity.ok("한줄 소개가 성공적으로 변경되었습니다.");
+    return ResponseEntity.ok().build();
   }
 
 
