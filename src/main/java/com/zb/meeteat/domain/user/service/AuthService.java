@@ -50,10 +50,10 @@ public class AuthService {
 
   private void validateDuplicateUser(String email, String nickname) {
     if (userRepository.existsByEmail(email)) {
-      throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+      throw new CustomException(ErrorCode.EMAIL_ALREADY_REGISTERED);
     }
     if (userRepository.existsByNickname(nickname)) {
-      throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+      throw new CustomException(ErrorCode.NICKNAME_ALREADY_REGISTERED);
     }
   }
 
@@ -70,7 +70,7 @@ public class AuthService {
 
     // 3. 비밀번호 검증
     if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-      throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
+      throw new CustomException(ErrorCode.PASSWORD_MISMATCH);
     }
 
     // 4. JWT 토큰 생성
