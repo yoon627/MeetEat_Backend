@@ -16,24 +16,35 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  // IllegalArgumentException이 발생하면 400 응답을 반환 (예: 이메일 중복, 닉네임 중복)
-  @ExceptionHandler(IllegalArgumentException.class)
-  public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException e) {
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-  }
-
   // `@Valid` 유효성 검사 실패 (비밀번호 형식 오류 등)
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<String> handleValidationException(MethodArgumentNotValidException e) {
+  public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException e) {
     BindingResult bindingResult = e.getBindingResult();
-    StringBuilder errorMessage = new StringBuilder();
 
-    for (FieldError fieldError : bindingResult.getFieldErrors()) {
-      errorMessage.append(fieldError.getDefaultMessage()).append(" ");
-    }
+    // 첫 번째 에러만 가져옴 (여러 개가 있을 경우)
+    FieldError fieldError = bindingResult.getFieldErrors().get(0);
 
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage.toString().trim());
+    // 필드명에 따라 ErrorCode를 매핑
+    ErrorCode errorCode = getErrorCodeForField(fieldError.getField());
+
+    Map<String, Object> errorResponse = new HashMap<>();
+    errorResponse.put("status", errorCode.getStatus().value());
+    errorResponse.put("error", errorCode.getCode());
+    errorResponse.put("message", errorCode.getMessage());
+
+    return ResponseEntity.status(errorCode.getStatus()).body(errorResponse);
   }
+
+  // 필드명에 따라 적절한 ErrorCode를 반환하는 메서드
+  private ErrorCode getErrorCodeForField(String field) {
+    return switch (field) {
+      case "email" -> ErrorCode.INVALID_EMAIL;
+      case "password" -> ErrorCode.INVALID_PASSWORD;
+      case "nickname" -> ErrorCode.INVALID_NICKNAME;
+      default -> ErrorCode.BAD_REQUEST;
+    };
+  }
+
 
   // 예상치 못한 예외 발생 시 500 응답을 반환
   @ExceptionHandler(Exception.class)

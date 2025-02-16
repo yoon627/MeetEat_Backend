@@ -10,15 +10,19 @@ import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
 import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.exception.ErrorCode;
+import com.zb.meeteat.exception.ErrorCode;
 import com.zb.meeteat.jwt.JwtUtil;
 import com.zb.meeteat.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,6 +32,7 @@ public class AuthService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtUtil jwtUtil;
+  private final RedisTemplate<String, String> redisTemplate;
 
   @Transactional
   public User signup(SignupRequestDto requestDto) {
@@ -48,10 +53,10 @@ public class AuthService {
 
   private void validateDuplicateUser(String email, String nickname) {
     if (userRepository.existsByEmail(email)) {
-      throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+      throw new CustomException(ErrorCode.EMAIL_ALREADY_REGISTERED);
     }
     if (userRepository.existsByNickname(nickname)) {
-      throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+      throw new CustomException(ErrorCode.NICKNAME_ALREADY_REGISTERED);
     }
   }
 
@@ -68,16 +73,24 @@ public class AuthService {
 
     // 3. 비밀번호 검증
     if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-      throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
+      throw new CustomException(ErrorCode.PASSWORD_MISMATCH);
     }
 
     // 4. JWT 토큰 생성
     String accessToken = jwtUtil.generateToken(user);
 
     // 5. 프로필 업데이트 필요 여부 확인 (닉네임이 없거나 비어있는 경우 true)
-    boolean needProfileUpdate = user.isProfileIncomplete();
-    return new AuthCodeResponseDto(accessToken, needProfileUpdate);
+    String key = "firstLogin:" + user.getId();
+    Boolean isNew = redisTemplate.opsForValue().setIfAbsent(key, "true");
+
+    // 6. 첫 로그인 여부에 따라 응답 객체 다르게 반환
+    if (isNew != null && isNew) {
+      return new AuthCodeResponseDto(accessToken, true);
+    } else {
+      return new AuthCodeResponseDto(accessToken);
+    }
   }
+
 
   @Transactional
   public void signout(String token) {
