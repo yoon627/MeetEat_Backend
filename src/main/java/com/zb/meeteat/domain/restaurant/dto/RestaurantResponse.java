@@ -10,9 +10,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class RestaurantResponse {
 
-  private Long restaurantId;
+  private Long id;
   private Long kakaomaps_id;
   private String place_name;
   private String phone;
@@ -25,7 +28,7 @@ public class RestaurantResponse {
 
   public static RestaurantResponse fromRestaurant(Restaurant restaurant, String thumbnail) {
     RestaurantResponse res = new RestaurantResponse();
-    res.setRestaurantId(restaurant.getId());
+    res.setId(restaurant.getId());
     res.setKakaomaps_id(restaurant.getKakaomapsId());
     res.setPlace_name(restaurant.getPlaceName());
     res.setPhone(restaurant.getPhone());
