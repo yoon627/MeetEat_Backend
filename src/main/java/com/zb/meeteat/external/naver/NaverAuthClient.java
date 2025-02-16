@@ -43,8 +43,8 @@ public class NaverAuthClient {
     params.add("grant_type", "authorization_code");
     params.add("client_id", clientId);
     params.add("client_secret", clientSecret);
+    params.add("redirect_uri", redirectUri);
     params.add("code", authCode);
-    params.add("state", "random-state");
 
     HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
 
