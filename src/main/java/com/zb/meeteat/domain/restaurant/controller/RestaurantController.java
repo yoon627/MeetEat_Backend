@@ -64,10 +64,9 @@ public class RestaurantController {
   public ResponseEntity createReview(
       @RequestHeader("Authorization") String token,
       @ModelAttribute @Valid CreateReviewRequest req) throws CustomException {
-    // 토큰에서 userId 추출
-    long userId = jwtUtil.getUserId(token.replace("Bearer ", "")); // "Bearer "를 제거하고 토큰을 전달
+    long userId = jwtUtil.getUserId(token.replace("Bearer ", ""));
 
-    RestaurantReview review = restaurantService.createReview(userId, req);
+    restaurantService.createReview(userId, req);
     return ResponseEntity.ok().build();
   }
 
