@@ -7,6 +7,7 @@ import com.zb.meeteat.domain.matching.repository.MatchingRepository;
 import com.zb.meeteat.domain.redis.service.RedisService;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantDto;
 import com.zb.meeteat.domain.sse.service.SseService;
+import com.zb.meeteat.domain.user.service.AuthService;
 import com.zb.meeteat.type.MatchingStatus;
 import jakarta.annotation.PostConstruct;
 import java.util.LinkedList;
@@ -27,7 +28,7 @@ public class MatchingService {
 
   private static final double EARTH_RADIUS = 6371000; //단위:m(미터)
   private static final double MAX_DISTANCE_CONDITION = 2000; //단위:m(미터)
-  //  private final AuthService authService;
+  private final AuthService authService;
   private final SseService sseService;
   private final RedisService redisService;
   private final MatchingRepository matchingRepository;
@@ -44,8 +45,7 @@ public class MatchingService {
   }
 
   public void requestMatching(MatchingRequestDto matchingRequestDto) {
-//    long userId = authService.getLoginUserId();
-    long userId = 1;
+    long userId = authService.getLoggedInUserId();
     log.info("매칭 요청 도착: userId={}, matchingRequestDto={}", userId, matchingRequestDto);
     matchingRequestDto.setUserId(userId);
     redisService.addMatchingQueue(matchingRequestDto);
@@ -53,8 +53,7 @@ public class MatchingService {
   }
 
   public void cancelMatching() {
-//    long userId = authService.getLoginUserId();
-    long userId = 1;
+    long userId = authService.getLoggedInUserId();
     log.info("매칭 취소 도착: userId={}", userId);
     sseService.unsubscribe(userId);
     cancelledUserSet.add(userId);
@@ -117,8 +116,7 @@ public class MatchingService {
   }
 
   public void joinTempTeam(JoinRequestDto joinRequestDto) {
-    long userId = 1;
-//    long userId = authService.getLoginUserId();
+    long userId = authService.getLoggedInUserId();
     String teamName = "team" + joinRequestDto.getTeamId();
     if (redisService.isTempTeamExist(teamName)) {
       if (joinRequestDto.isJoin()) {

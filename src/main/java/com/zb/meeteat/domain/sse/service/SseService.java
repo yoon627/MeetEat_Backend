@@ -6,6 +6,7 @@ import com.zb.meeteat.domain.matching.dto.MatchingRequestDto;
 import com.zb.meeteat.domain.matching.dto.TeamResponseDto;
 import com.zb.meeteat.domain.matching.dto.TempTeamResponseDto;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantDto;
+import com.zb.meeteat.domain.user.service.AuthService;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -20,11 +21,11 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequiredArgsConstructor
 public class SseService {
 
+  private final AuthService authService;
   private final Map<Long, SseEmitter> sseEmitterMap = new ConcurrentHashMap<>();
 
   public SseEmitter subscribe() {
-    //TODO 임시로 userId를 정해놓음
-    long userId = 1L;
+    long userId = authService.getLoggedInUserId();
     SseEmitter sseEmitter = new SseEmitter(600_0000L); // connectionTimeOut 10분
     try {
       sseEmitter.send(SseEmitter.event().name("match").data("SSE Connected"));
