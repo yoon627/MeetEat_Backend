@@ -95,8 +95,12 @@ public class RestaurantService {
 
     // 리뷰이미지가 있는 최신리뷰 가지고 오기
     RestaurantReview lastedReview = restaurantReviewRepository.findTop1ByRestaurantOrderByImgUrlDesc(restaurant);
+    String imgUrl = "";
+    if (lastedReview != null) {
+      imgUrl = lastedReview.getImgUrl();
+    }
 
-    return RestaurantResponse.fromRestaurant(restaurant, lastedReview.getImgUrl());
+    return RestaurantResponse.fromRestaurant(restaurant, imgUrl);
   }
 
   public Page<RestaurantReviewsResponse> getRestaurantReviews(
