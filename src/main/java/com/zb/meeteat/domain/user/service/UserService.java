@@ -9,6 +9,7 @@ import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ public class UserService {
 
   private final UserRepository userRepository;
   private final MatchingHistoryRepository matchingHistoryRepository;
+  private final RedisTemplate<String, String> redisTemplate;
 
   @Transactional
   public UserProfileResponse getUserProfile(Long userId) {
@@ -67,6 +69,11 @@ public class UserService {
     if (hasOngoingMatching) {
       throw new CustomException(ErrorCode.USER_HAS_ONGOING_MATCHING);
     }
+
+    // Redis에서 firstLogin 데이터 삭제
+    String redisKey = "firstLogin:" + user.getId();
+    redisTemplate.delete(redisKey);
+    log.info("Redis에서 firstLogin 데이터 삭제 완료: {}", redisKey);
 
     // 유저 상태를 탈퇴 처리
     userRepository.delete(user);
