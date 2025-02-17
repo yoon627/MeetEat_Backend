@@ -53,36 +53,14 @@ public class RestaurantService {
     // Pageable 객체 생성 (페이지, 사이즈, 정렬 방식)
     Pageable pageable = PageRequest.of(search.getPage(), search.getSize());
 
-    // 정렬 기준에 따라 쿼리 메소드 실행
-    Page<RestaurantResponse> restaurants = Page.empty();
-
-    if (Sort.RATING.equals(search.getSorted())) {
-      restaurants = restaurantRepository.getRestaurantByRegionAndPlaceNameAndCategoryNameOrderByRatingDesc(
-          search.getRegion().toString(),
-          search.getPlaceName(),
-          categoryName,
-          pageable);
-    } else if (Sort.DISTANCE.equals(search.getSorted())) {
+    if (Sort.DISTANCE.equals(search.getSorted())) {
       if (Double.isNaN(search.getUserX()) || Double.isNaN(search.getUserX())) {
         throw new CustomException(ErrorCode.USER_LOCATION_NOT_PROVIDED);
       }
-
-      restaurants = restaurantRepository.getRestaurantByRegionAndPlaceNameAndCategoryNameOrderByDistance(
-          search.getUserY(),
-          search.getUserX(),
-          search.getRegion().toString(),
-          search.getPlaceName(),
-          categoryName,
-          pageable);
-    } else {
-      restaurants = restaurantRepository.getRestaurantByRegionAndCategoryNameAndPlaceName(
-          search.getRegion().toString(),
-          search.getPlaceName(),
-          categoryName,
-          pageable);
     }
 
-    return restaurants;
+    // 정렬 기준에 따라 쿼리 메소드 실행
+    return restaurantRepository.findRestaurantsByFilters(search, pageable);
   }
 
   public RestaurantResponse getRestaurant(Long restaurantId) {
@@ -109,7 +87,7 @@ public class RestaurantService {
     // Pageable 객체 생성 (페이지, 사이즈, 정렬 방식)
     Pageable pageable = PageRequest.of(page, size);
 
-    return restaurantReviewRepository.getRestaurantReviewByRestaurantId(restaurantId, pageable);
+    return restaurantReviewRepository.findRestaurantReviewsByRestaurantId(restaurantId, pageable);
   }
 
   @Transactional
