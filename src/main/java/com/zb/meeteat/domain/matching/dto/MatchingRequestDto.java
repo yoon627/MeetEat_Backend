@@ -21,5 +21,5 @@ public class MatchingRequestDto {
   private double userLat;
   private int groupSize;
   private LocalDateTime matchingStartTime;
-  private RestaurantDto restaurantDto;
+  private RestaurantDto place;
 }

@@ -3,13 +3,19 @@ package com.zb.meeteat.domain.matching.service;
 import com.zb.meeteat.domain.matching.dto.JoinRequestDto;
 import com.zb.meeteat.domain.matching.dto.MatchingDto;
 import com.zb.meeteat.domain.matching.dto.MatchingRequestDto;
+import com.zb.meeteat.domain.matching.entity.Matching;
 import com.zb.meeteat.domain.matching.repository.MatchingRepository;
 import com.zb.meeteat.domain.redis.service.RedisService;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantDto;
+import com.zb.meeteat.domain.restaurant.entity.Restaurant;
+import com.zb.meeteat.domain.restaurant.service.RestaurantService;
 import com.zb.meeteat.domain.sse.service.SseService;
+import com.zb.meeteat.domain.user.entity.User;
+import com.zb.meeteat.domain.user.repository.UserRepository;
 import com.zb.meeteat.domain.user.service.AuthService;
 import com.zb.meeteat.type.MatchingStatus;
 import jakarta.annotation.PostConstruct;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -36,6 +43,12 @@ public class MatchingService {
   private final Set<Long> cancelledUserSet = ConcurrentHashMap.newKeySet();//취소한 유저가 계산되고 있는 경우를 체크하기 위해
   private final PriorityQueue<Integer> teamIdPq = new PriorityQueue<>();
   private final Map<String, List<MatchingRequestDto>> tempTeamMap = new ConcurrentHashMap<>();
+  private final Map<String, Integer> tmpTeamAgreeCountMap = new ConcurrentHashMap<>();
+  private final Map<String, Integer> tmpTeamResponseCountMap = new ConcurrentHashMap<>();
+  private final RestaurantService restaurantService;
+  private final MatchingHistoryService matchingHistoryService;
+  private final UserRepository userRepository;
+  private final Map<String, LocalDateTime> tempTeamTimeMap = new ConcurrentHashMap<>();
 
   @PostConstruct
   public void initTeamIdQueue() {
@@ -44,10 +57,29 @@ public class MatchingService {
     }
   }
 
+//  public void saveMatching(MatchingDto matchingDto) {
+//    log.info("Save matching " + matchingDto);
+//    log.info(matchingDto.toString());
+//    log.info(String.valueOf(matchingDto.getCount()));
+//    log.info(String.valueOf(matchingDto.getStatus()));
+//    log.info(matchingDto.getRestaurant().toString());
+//    log.info(matchingDto.getRestaurant().getId().toString());
+//
+//    matchingRepository.save(MatchingDto.toEntity(matchingDto));
+//  }
+
   public void requestMatching(MatchingRequestDto matchingRequestDto) {
     long userId = authService.getLoggedInUserId();
+    User user = userRepository.findById(userId).orElseThrow(RuntimeException::new);
+    if (user.getBannedEndAt() != null && user.getBannedEndAt().isAfter(LocalDateTime.now())) {
+      //TODO 밴되었다고 알려주기
+      return;
+    }
+    cancelledUserSet.remove(userId);
     log.info("Matching requested: " + userId);
     log.info("매칭 요청 도착: userId={}, matchingRequestDto={}", userId, matchingRequestDto);
+    log.info("matchingRequestDto.place={}", matchingRequestDto.getPlace());
+    log.info("matchingRequestDto.placeName={}", matchingRequestDto.getPlace().getName());
     matchingRequestDto.setUserId(userId);
     redisService.addMatchingQueue(matchingRequestDto);
     log.info("매칭 요청 처리 완료: userId={}, matchingRequestDto={}", userId, matchingRequestDto);
@@ -85,6 +117,9 @@ public class MatchingService {
           redisService.rightPushMatchingQueue(candidate);
           log.info("임시 팀 생성 중: 후보군 팀에서 제외, candidate={}", candidate.getUserId());
         }
+        if (cancelledUserSet.contains(user.getUserId())) {
+          break;
+        }
       }
       if (team.size() == user.getGroupSize()) {
         log.info("임시 팀 생성 완료 후 확인: 계산 중에 취소한 인원이 있는지 확인 중");
@@ -103,14 +138,19 @@ public class MatchingService {
         log.info("임시 팀 생성 완료: 계산 중에 취소한 인원이 없음");
         int teamId = teamIdPq.poll();
         String teamName = "team" + teamId;
-        redisService.makeTempTeam(teamName, team.size());
+//        redisService.makeTempTeam(teamName, team.size());
+        tempTeamTimeMap.put(teamName, LocalDateTime.now());
+        tmpTeamAgreeCountMap.put(teamName, 0);
+        tmpTeamResponseCountMap.put(teamName, 0);
         tempTeamMap.put(teamName, team);
         sseService.notifyTempTeam(team, teamId);
         log.info("생성된 임시 팀 사람들에게 알려줌: teamId={}", teamId);
       } else {
+        log.info("임시 팀 인원이 모자라서 팀 해체");
         for (MatchingRequestDto member : team) {
-          redisService.rightPushMatchingQueue(member);
-          log.info("임시 팀 인원이 모자라서 팀 해체");
+          if (!cancelledUserSet.contains(member.getUserId())) {
+            redisService.rightPushMatchingQueue(member);
+          }
         }
       }
     }
@@ -118,50 +158,116 @@ public class MatchingService {
 
   public void joinTempTeam(JoinRequestDto joinRequestDto) {
     long userId = authService.getLoggedInUserId();
+    joinRequestDto.setUserId(userId);
     String teamName = "team" + joinRequestDto.getTeamId();
-    if (redisService.isTempTeamExist(teamName)) {
+    log.info("join 신청이 서비스에 옴");
+    if (tempTeamTimeMap.get(teamName).isAfter(LocalDateTime.now().minusMinutes(1))) {
+      log.info("join 신청이 시간안에 옴");
+//    if (redisService.isTempTeamExist(teamName)) {
+      log.info(joinRequestDto.toString());
+      log.info(String.valueOf(joinRequestDto.isJoin()));
       if (joinRequestDto.isJoin()) {
         log.info("생성된 임시 팀에 유저가 합류함: teamId={},userId={}", joinRequestDto.getTeamId(), userId);
-        redisService.addCurrentTempTeamSize(teamName);
-        int count = redisService.getCurrentTempTeamSize(teamName);
+//        redisService.addCurrentTempTeamSize(teamName);
+        tmpTeamAgreeCountMap.put(teamName, tmpTeamAgreeCountMap.get(teamName) + 1);
+        tmpTeamResponseCountMap.put(teamName, tmpTeamResponseCountMap.get(teamName) + 1);
+        int agreeCount = tmpTeamAgreeCountMap.get(teamName);
+        log.info("join 알림 보내기 전");
+        log.info("agreeCount={}, teamSize={}", agreeCount, tempTeamMap.get(teamName).size());
         sseService.notifyTempTeamJoin(tempTeamMap.get(teamName), joinRequestDto);
-        if (count == redisService.getTotalTempTeamSize(teamName)) {
+        log.info("join 알림 보내기 완료");
+        if (agreeCount == tempTeamMap.get(teamName).size()) {
+          log.info("임시팀 모두가 동의해 팀 생성");
           makeTeam(tempTeamMap.get(teamName));
-          redisService.removeTempTeam(teamName);
+//          redisService.removeTempTeam(teamName);
+          teamIdPq.add(joinRequestDto.getTeamId());
+          return;
+        }
+        if (tmpTeamResponseCountMap.get(teamName) == tempTeamMap.get(teamName).size()) {
+          List<MatchingRequestDto> team = tempTeamMap.get(teamName);
+          for (MatchingRequestDto member : team) {
+            if (!cancelledUserSet.contains(member.getUserId())) {
+              redisService.rightPushMatchingQueue(member);
+            }
+          }
+          log.info("생성된 임시 팀이 모두 동의하지 않아 해체됨: teamId={}", joinRequestDto.getTeamId());
+          teamIdPq.add(joinRequestDto.getTeamId());
+          return;
         }
       } else {
-        List<MatchingRequestDto> team = tempTeamMap.get(teamName);
-        teamIdPq.add(joinRequestDto.getTeamId());
+        tmpTeamResponseCountMap.put(teamName, tmpTeamResponseCountMap.get(teamName) + 1);
         log.info("생성된 임시 팀을 유저가 거절함: teamId={},userId={}", joinRequestDto.getTeamId(), userId);
-        sseService.notifyTempTeamJoin(tempTeamMap.get(teamName), joinRequestDto);
+        if (tmpTeamResponseCountMap.get(teamName) == tempTeamMap.get(teamName).size()) {
+          teamIdPq.add(joinRequestDto.getTeamId());
+          List<MatchingRequestDto> team = tempTeamMap.get(teamName);
+          sseService.notifyTempTeamJoin(team, joinRequestDto);
+          for (MatchingRequestDto member : team) {
+            if (!cancelledUserSet.contains(member.getUserId())) {
+              redisService.rightPushMatchingQueue(member);
+            }
+          }
+          log.info("생성된 임시 팀이 모두 동의하지 않아 해체됨: teamId={}", joinRequestDto.getTeamId());
+          teamIdPq.add(joinRequestDto.getTeamId());
+        }
       }
     } else {
-      //TODO 팀이 해체됐을때 할 로직 추가
+      List<MatchingRequestDto> team = tempTeamMap.get(teamName);
+      for (MatchingRequestDto member : team) {
+        if (!cancelledUserSet.contains(member.getUserId())) {
+          redisService.rightPushMatchingQueue(member);
+        }
+      }
       log.info("생성된 임시 팀이 시간이 지나 해체됨: teamId={}", joinRequestDto.getTeamId());
       teamIdPq.add(joinRequestDto.getTeamId());
     }
   }
 
+  @Transactional
   public void makeTeam(List<MatchingRequestDto> team) {
     log.info("팀 생성 완료: team={}", team);
-    //TODO 식당 선정 로직
-    RestaurantDto restaurantDto = team.getFirst().getRestaurantDto();
+    RestaurantDto restaurantDto = team.getFirst().getPlace();
     log.info("팀 생성 후 선정된 식당: restaurantDto={}", restaurantDto);
-    //TODO 식당 저장 로직
-    //TODO matchingDto에 식당추가
-    MatchingDto matchingDto = MatchingDto.builder().count(team.size())
+    Restaurant restaurant = restaurantService.saveRestaurant(restaurantDto);
+//    log.info(restaurant.toString());
+    log.info("Restaurant Id after Saving " + restaurant.getId());
+    restaurantDto.setId(restaurant.getId());
+    restaurantDto = RestaurantDto.toDto(restaurant);
+    MatchingDto matchingDto = MatchingDto.builder()
+        .count(team.size())
         .restaurant(restaurantDto)
         .status(MatchingStatus.MATCHED).build();
-    saveTeam(matchingDto);
+    saveTeam(matchingDto, team, restaurant);
     log.info("팀 생성 알림: team={}", team);
     sseService.notifyTeam(restaurantDto, team);
     log.info("팀 생성 알림 보내기 완료: team={}", team);
-
-    //TODO 매칭내역 저장
+//    saveMatching(matchingDto);
+    //TODO 3분이내 이탈자 발생
   }
 
-  public void saveTeam(MatchingDto matchingDto) {
-    matchingRepository.save(MatchingDto.toEntity(matchingDto));
+  public void saveTeam(MatchingDto matchingDto, List<MatchingRequestDto> team,
+      Restaurant restaurant) {
+//    log.info("MatchingDto Restaurant Id:" + String.valueOf(matchingDto.getRestaurant().getId()));
+//    if (matchingDto.getRestaurant() != null && matchingDto.getRestaurant().getId() == null) {
+//      Restaurant restaurant = restaurantService.saveRestaurant(matchingDto.getRestaurant());
+//      matchingDto.getRestaurant().setId(restaurant.getId());
+//    }
+    log.info("Save matching " + matchingDto);
+    log.info(matchingDto.toString());
+    log.info(String.valueOf(matchingDto.getCount()));
+    log.info(String.valueOf(matchingDto.getStatus()));
+    log.info(matchingDto.getRestaurant().toString());
+    log.info(matchingDto.getRestaurant().getId().toString());
+    //TODO 문제 발생
+    Matching org = MatchingDto.toEntity(matchingDto, restaurant);
+    log.info("org count:" + org.getCount());
+    log.info("org status:" + org.getStatus());
+    log.info("org restaurant:" + org.getRestaurant().toString());
+    log.info("org restaurantId:" + org.getRestaurant().getId().toString());
+    log.info("org createdAt:" + org.getCreatedAt());
+    Matching matching = matchingRepository.save(org);
+    log.info("@@@@@@@@@ MATCHING SAVE SUCCESS @@@@@@@@@@@");
+    matchingHistoryService.saveHistory(matching, team);
+    log.info("@@@@@@@@@ MATCHING HISTORY SAVE SUCCESS @@@@@@@@@@@");
   }
 
   private boolean checkTeamCondition(List<MatchingRequestDto> team, MatchingRequestDto member) {
@@ -174,6 +280,7 @@ public class MatchingService {
   }
 
   private boolean checkCondition(MatchingRequestDto member1, MatchingRequestDto member2) {
+    //TODO 테스트용으로 모두 허용
 //    if (member1.getGroupSize() != member2.getGroupSize()) {
 //      return false;
 //    }
@@ -183,12 +290,12 @@ public class MatchingService {
 
   private boolean checkDistanceCondition(MatchingRequestDto member1, MatchingRequestDto member2) {
     if (calculateDistance(member1.getUserLat(), member1.getUserLon(),
-        member2.getRestaurantDto().getLat(), member2.getRestaurantDto().getLon())
+        member2.getPlace().getLat(), member2.getPlace().getLon())
         > MAX_DISTANCE_CONDITION) {
       return false;
     }
     if (calculateDistance(member2.getUserLat(), member2.getUserLon(),
-        member1.getRestaurantDto().getLat(), member1.getRestaurantDto().getLon())
+        member1.getPlace().getLat(), member1.getPlace().getLon())
         > MAX_DISTANCE_CONDITION) {
       return false;
     }

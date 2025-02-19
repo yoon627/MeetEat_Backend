@@ -6,6 +6,7 @@ import com.zb.meeteat.domain.matching.entity.MatchingStatus;
 import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
 import com.zb.meeteat.domain.restaurant.dto.Category;
 import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequest;
+import com.zb.meeteat.domain.restaurant.dto.RestaurantDto;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantMyReviewResponse;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantReviewsResponse;
@@ -38,17 +39,27 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class RestaurantService {
 
+  private static int MAX_FILE_COUNT = 7;
+  private static int AFTER_MATCHING_TIME = 2;
   private final S3ImageUpload s3ImageUpload;
   private final RestaurantRepository restaurantRepository;
   private final RestaurantReviewRepository restaurantReviewRepository;
   private final UserRepository userRepository;
   private final MatchingHistoryRepository matchingHistoryRepository;
-  private static int MAX_FILE_COUNT = 7;
-  private static int AFTER_MATCHING_TIME = 2;
+
+  public Restaurant saveRestaurant(RestaurantDto restaurantDto) {
+    Restaurant restaurant = restaurantRepository.findByPlaceNameAndRoadAddressName(
+        restaurantDto.getName(), restaurantDto.getRoad_address_name());
+    if (restaurant != null) {
+      return restaurant;
+    } else {
+      return restaurantRepository.save(RestaurantDto.toEntity(restaurantDto));
+    }
+  }
 
   public Page<RestaurantResponse> getRestaurantList(SearchRequest search) {
-
-    String categoryName = Category.전체.equals(search.getCategoryName()) ? "" : search.getCategoryName().toString();
+    String categoryName =
+        Category.전체.equals(search.getCategoryName()) ? "" : search.getCategoryName().toString();
 
     // Pageable 객체 생성 (페이지, 사이즈, 정렬 방식)
     Pageable pageable = PageRequest.of(search.getPage(), search.getSize());
@@ -94,7 +105,8 @@ public class RestaurantService {
     }
 
     // 리뷰이미지가 있는 최신리뷰 가지고 오기
-    RestaurantReview lastedReview = restaurantReviewRepository.findTop1ByRestaurantOrderByImgUrlDesc(restaurant);
+    RestaurantReview lastedReview = restaurantReviewRepository.findTop1ByRestaurantOrderByImgUrlDesc(
+        restaurant);
     String imgUrl = "";
     if (lastedReview != null) {
       imgUrl = lastedReview.getImgUrl();
@@ -171,7 +183,8 @@ public class RestaurantService {
       throw new CustomException(ErrorCode.CANCELED_MATCHING);
     }
 
-    RestaurantReview myReview = restaurantReviewRepository.findRestaurantReviewByMatchingHistoryId(matchingHistoryId);
+    RestaurantReview myReview = restaurantReviewRepository.findRestaurantReviewByMatchingHistoryId(
+        matchingHistoryId);
 
     if (myReview == null) {
       return new RestaurantMyReviewResponse();

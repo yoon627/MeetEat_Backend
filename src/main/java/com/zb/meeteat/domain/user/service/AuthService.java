@@ -10,19 +10,16 @@ import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
 import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.exception.ErrorCode;
-import com.zb.meeteat.exception.ErrorCode;
 import com.zb.meeteat.jwt.JwtUtil;
 import com.zb.meeteat.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -96,11 +93,11 @@ public class AuthService {
   public void signout(String token) {
     String jwt = token.replace("Bearer ", "");
 
-    if (!jwtUtil.validateToken(jwt)) {
-      throw new CustomException(ErrorCode.INVALID_TOKEN);
-    }
+//    if (!jwtUtil.validateToken(jwt)) {
+//      throw new CustomException(ErrorCode.INVALID_TOKEN);
+//    }
 
-    jwtUtil.blacklistToken(jwt);
+//    jwtUtil.blacklistToken(jwt);
   }
 
   @Transactional

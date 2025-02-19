@@ -1,8 +1,6 @@
 package com.zb.meeteat.domain.redis.service;
 
 import com.zb.meeteat.domain.matching.dto.MatchingRequestDto;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,7 +17,7 @@ public class RedisService {
   private final int TEMP_TEAM_WAIT_TIME = 180;
 
   private final RedisTemplate<String, MatchingRequestDto> redisMatchingTemplate;
-  private final RedisTemplate<String, String> redisTeamTemplate;
+  private final RedisTemplate<String, Object> redisTeamTemplate;
 
   public boolean isMatchingQueueEmpty() {
     return !(redisMatchingTemplate.hasKey(MATCHING_QUEUE)
@@ -39,32 +37,35 @@ public class RedisService {
   }
 
   public void makeTempTeam(String teamName, int size) {
-    redisTeamTemplate.opsForHash()
-        .put(teamName, AGREE_COUNT, "0");
-    redisTeamTemplate.opsForHash().put(teamName, GROUP_SIZE, String.valueOf(size));
-    redisTeamTemplate.expire(teamName, TEMP_TEAM_WAIT_TIME, TimeUnit.SECONDS);
+//    HashOperations<String, Object, Object> opsForHash = redisTeamTemplate.opsForHash();
+//    Map<String, Object> map = new HashMap<>();
+//    map.put(AGREE_COUNT, 0);
+//    map.put(GROUP_SIZE, size);
+//    opsForHash.putAll(teamName, map);
+//    redisTeamTemplate.opsForHash()
+//        .put(teamName, AGREE_COUNT, 0);
+//    redisTeamTemplate.opsForHash().put(teamName, GROUP_SIZE, size);
+//    redisTeamTemplate.expire(teamName, TEMP_TEAM_WAIT_TIME, TimeUnit.SECONDS);
   }
 
   public boolean isTempTeamExist(String teamName) {
     return redisTeamTemplate.hasKey(teamName);
   }
 
-  public int getCurrentTempTeamSize(String teamName) {
-    return Integer.parseInt(
-        (String) Objects.requireNonNull(redisTeamTemplate.opsForHash().get(teamName, AGREE_COUNT)));
-  }
-
-  public int getTotalTempTeamSize(String teamName) {
-    return Integer.parseInt(
-        (String) Objects.requireNonNull(redisTeamTemplate.opsForHash().get(teamName, GROUP_SIZE)));
-  }
+//  public int getCurrentTempTeamSize(String teamName) {
+//    return (int) redisTeamTemplate.opsForHash().get(teamName, AGREE_COUNT);
+//  }
+//
+//  public int getTotalTempTeamSize(String teamName) {
+//    return (int) redisTeamTemplate.opsForHash().get(teamName, GROUP_SIZE);
+//  }
 
   public void removeTempTeam(String teamName) {
     redisTeamTemplate.delete(teamName);
   }
 
-  public void addCurrentTempTeamSize(String teamName) {
-    redisTeamTemplate.opsForHash().increment(teamName, AGREE_COUNT, 1);
-  }
+//  public void addCurrentTempTeamSize(String teamName) {
+//    redisTeamTemplate.opsForHash().increment(teamName, AGREE_COUNT, 1);
+//  }
 
 }

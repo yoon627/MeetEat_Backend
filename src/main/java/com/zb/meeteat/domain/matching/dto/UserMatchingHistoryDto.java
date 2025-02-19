@@ -1,5 +1,6 @@
 package com.zb.meeteat.domain.matching.dto;
 
+import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,10 +14,11 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TeamResponseDto {
+public class UserMatchingHistoryDto {
 
-  private String message;
-  private MatchingDto matching;
-
-
+  private Long id;
+  private String nickname;
+  private String introduce;
+  private RestaurantReview review;
+  private Integer matchingCount;
 }

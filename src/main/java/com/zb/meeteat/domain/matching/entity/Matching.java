@@ -2,7 +2,6 @@ package com.zb.meeteat.domain.matching.entity;
 
 import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.type.MatchingStatus;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -13,10 +12,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -46,12 +43,15 @@ public class Matching {
   private MatchingStatus status;  // 매칭상태
 
   @CreatedDate
+  @Column(nullable = false)
   private LocalDateTime createdAt;  // 생성시간
 
   @ManyToOne
   @JoinColumn(name = "restaurant_id", nullable = false)
   private Restaurant restaurant;  // 식당아이디
 
-  @OneToMany(mappedBy = "id", cascade = CascadeType.REMOVE, orphanRemoval = true)
-  private List<MatchingHistory> history;
+  //  @OneToMany(mappedBy = "id", cascade = CascadeType.REMOVE, orphanRemoval = true)
+//  private List<MatchingHistory> history;
+//  @OneToMany(mappedBy = "id", cascade = CascadeType.REMOVE, orphanRemoval = true)
+//  private List<UserMatchingHistoryDto> userList;
 }
