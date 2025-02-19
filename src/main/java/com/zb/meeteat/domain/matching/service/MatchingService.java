@@ -1,5 +1,6 @@
 package com.zb.meeteat.domain.matching.service;
 
+import com.zb.meeteat.domain.ban.service.BanService;
 import com.zb.meeteat.domain.matching.dto.JoinRequestDto;
 import com.zb.meeteat.domain.matching.dto.MatchingDto;
 import com.zb.meeteat.domain.matching.dto.MatchingRequestDto;
@@ -49,6 +50,7 @@ public class MatchingService {
   private final MatchingHistoryService matchingHistoryService;
   private final UserRepository userRepository;
   private final Map<String, LocalDateTime> tempTeamTimeMap = new ConcurrentHashMap<>();
+  private final BanService banService;
 
   @PostConstruct
   public void initTeamIdQueue() {
@@ -282,6 +284,8 @@ public class MatchingService {
   private boolean checkCondition(MatchingRequestDto member1, MatchingRequestDto member2) {
     //TODO 테스트용으로 모두 허용
 //    if (member1.getGroupSize() != member2.getGroupSize()) {
+//      return false;
+//    } else if (banService.checkBan(member1.getUserId(), member2.getUserId())) {
 //      return false;
 //    }
 //    return checkDistanceCondition(member1, member2);
