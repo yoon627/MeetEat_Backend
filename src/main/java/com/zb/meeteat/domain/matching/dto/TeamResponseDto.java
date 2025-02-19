@@ -18,5 +18,4 @@ public class TeamResponseDto {
   private String message;
   private MatchingDto matching;
 
-
 }

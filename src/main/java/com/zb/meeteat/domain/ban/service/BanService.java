@@ -43,4 +43,10 @@ public class BanService {
     Ban ban = banRepository.findByBannerIdAndBannedId(userId, bannedId);
     return ban != null;
   }
+
+  public boolean checkBan(long bannerId, long bannedId) {
+    Ban ban = banRepository.findByBannerIdAndBannedId(bannerId, bannedId);
+    return ban != null;
+  }
+
 }

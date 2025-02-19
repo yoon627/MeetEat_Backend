@@ -37,14 +37,21 @@ public class ReportService {
   }
 
   @Transactional
-  public void deleteReport(int reportedId, int matchingId) {
+  public void deleteReport(long reportedId, long matchingId) {
     Long userId = authService.getLoggedInUserId();
     reportRepository.deleteByReportedIdAndReportedIdAndMatchingId(userId, reportedId, matchingId);
   }
 
-  public boolean checkReport(int reportedId, int matchingId) {
+  public boolean checkReport(long reportedId, long matchingId) {
     Long userId = authService.getLoggedInUserId();
     Report report = reportRepository.findByReporterIdAndReportedIdAndMatchingId(userId, reportedId,
+        matchingId);
+    return report != null;
+  }
+
+  public boolean checkReport(long reporterId, long reportedId, long matchingId) {
+    Report report = reportRepository.findByReporterIdAndReportedIdAndMatchingId(reporterId,
+        reportedId,
         matchingId);
     return report != null;
   }

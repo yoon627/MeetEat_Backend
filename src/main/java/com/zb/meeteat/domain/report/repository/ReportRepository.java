@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
-  void deleteByReportedIdAndReportedIdAndMatchingId(Long userId, int reportedId, int matchingId);
+  void deleteByReportedIdAndReportedIdAndMatchingId(Long userId, Long reportedId, Long matchingId);
 
-  Report findByReporterIdAndReportedIdAndMatchingId(Long userId, int reportedId, int matchingId);
+  Report findByReporterIdAndReportedIdAndMatchingId(Long userId, Long reportedId, Long matchingId);
 }

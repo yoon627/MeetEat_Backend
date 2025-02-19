@@ -21,10 +21,12 @@ import lombok.extern.slf4j.Slf4j;
 @Builder
 public class MatchingDto {
 
+  private long id;
   private int count;
   private MatchingStatus status;
   private RestaurantDto restaurant;
   private List<UserMatchingHistoryDto> userList;
+  private LocalDateTime createdAt;
 
   public static Matching toEntity(MatchingDto matchingDto, Restaurant restaurant) {
     log.info("MatchingDto.toEntity: count:" + matchingDto.getCount());

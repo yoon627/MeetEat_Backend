@@ -228,7 +228,6 @@ public class MatchingService {
     RestaurantDto restaurantDto = team.getFirst().getPlace();
     log.info("팀 생성 후 선정된 식당: restaurantDto={}", restaurantDto);
     Restaurant restaurant = restaurantService.saveRestaurant(restaurantDto);
-//    log.info(restaurant.toString());
     log.info("Restaurant Id after Saving " + restaurant.getId());
     restaurantDto.setId(restaurant.getId());
     restaurantDto = RestaurantDto.toDto(restaurant);
@@ -236,15 +235,15 @@ public class MatchingService {
         .count(team.size())
         .restaurant(restaurantDto)
         .status(MatchingStatus.MATCHED).build();
-    saveTeam(matchingDto, team, restaurant);
+    Matching matching = saveTeam(matchingDto, team, restaurant);
     log.info("팀 생성 알림: team={}", team);
-    sseService.notifyTeam(restaurantDto, team);
+    sseService.notifyTeam(restaurantDto, team, matching);
     log.info("팀 생성 알림 보내기 완료: team={}", team);
 //    saveMatching(matchingDto);
     //TODO 3분이내 이탈자 발생
   }
 
-  public void saveTeam(MatchingDto matchingDto, List<MatchingRequestDto> team,
+  public Matching saveTeam(MatchingDto matchingDto, List<MatchingRequestDto> team,
       Restaurant restaurant) {
 //    log.info("MatchingDto Restaurant Id:" + String.valueOf(matchingDto.getRestaurant().getId()));
 //    if (matchingDto.getRestaurant() != null && matchingDto.getRestaurant().getId() == null) {
@@ -268,6 +267,7 @@ public class MatchingService {
     log.info("@@@@@@@@@ MATCHING SAVE SUCCESS @@@@@@@@@@@");
     matchingHistoryService.saveHistory(matching, team);
     log.info("@@@@@@@@@ MATCHING HISTORY SAVE SUCCESS @@@@@@@@@@@");
+    return matching;
   }
 
   private boolean checkTeamCondition(List<MatchingRequestDto> team, MatchingRequestDto member) {

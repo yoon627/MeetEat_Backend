@@ -21,4 +21,6 @@ public class UserMatchingHistoryDto {
   private String introduce;
   private RestaurantReview review;
   private Integer matchingCount;
+  private Boolean ban;
+  private Boolean report;
 }

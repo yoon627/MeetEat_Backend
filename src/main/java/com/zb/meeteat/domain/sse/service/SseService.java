@@ -137,7 +137,8 @@ public class SseService {
     }
   }
 
-  public void notifyTeam(RestaurantDto restaurantDto, List<MatchingRequestDto> team) {
+  public void notifyTeam(RestaurantDto restaurantDto, List<MatchingRequestDto> team,
+      Matching matching) {
     List<UserMatchingHistoryDto> userList = new ArrayList<>();
     for (MatchingRequestDto m : team) {
       User user = userRepository.findById(m.getUserId()).orElseThrow(RuntimeException::new);
@@ -145,7 +146,10 @@ public class SseService {
           .introduce(user.getIntroduce()).build());
     }
     TeamResponseDto teamResponseDto = TeamResponseDto.builder().message("팀 생성이 완료되었습니다.")
-        .matching(MatchingDto.builder().userList(userList).restaurant(restaurantDto).build())
+        .matching(
+            MatchingDto.builder().id(matching.getId()).userList(userList).restaurant(restaurantDto)
+                .createdAt(matching.getCreatedAt())
+                .build())
         .build();
     for (MatchingRequestDto matchingRequestDto : team) {
       sendTeamEvent(matchingRequestDto.getUserId(), teamResponseDto);

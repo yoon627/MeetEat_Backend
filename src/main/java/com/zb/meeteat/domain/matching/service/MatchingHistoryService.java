@@ -1,5 +1,6 @@
 package com.zb.meeteat.domain.matching.service;
 
+import com.zb.meeteat.domain.ban.service.BanService;
 import com.zb.meeteat.domain.matching.dto.MatchingHistoryDto;
 import com.zb.meeteat.domain.matching.dto.MatchingRequestDto;
 import com.zb.meeteat.domain.matching.dto.UserMatchingHistoryDto;
@@ -7,6 +8,7 @@ import com.zb.meeteat.domain.matching.entity.Matching;
 import com.zb.meeteat.domain.matching.entity.MatchingHistory;
 import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
 import com.zb.meeteat.domain.matching.repository.MatchingRepository;
+import com.zb.meeteat.domain.report.service.ReportService;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantReviewRepository;
 import com.zb.meeteat.domain.sse.service.SseService;
@@ -34,6 +36,8 @@ public class MatchingHistoryService {
   private final RestaurantReviewRepository restaurantReviewRepository;
   private final MatchingRepository matchingRepository;
   private final SseService sseService;
+  private final BanService banService;
+  private final ReportService reportService;
 
   public Page<MatchingHistoryDto> getMatchingHistory(int page, int size) {
     Long userId = authService.getLoggedInUserId();
@@ -59,6 +63,8 @@ public class MatchingHistoryService {
             .introduce(user.getIntroduce())
             .review(review)
             .matchingCount(historyList.size())
+            .ban(banService.checkBan(userId, user.getId()))
+            .report(reportService.checkReport(userId, user.getId(), history.getMatching().getId()))
             .build();
 
         userList.add(userDto);
