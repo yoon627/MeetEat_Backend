@@ -48,4 +48,6 @@ public class MatchingHistory {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "matchingId", nullable = false)
   private Matching matching; // 매칭 모임 아이디
+
+  private Boolean join;
 }

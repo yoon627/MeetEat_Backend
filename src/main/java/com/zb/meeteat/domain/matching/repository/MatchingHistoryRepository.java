@@ -18,8 +18,8 @@ public interface MatchingHistoryRepository extends JpaRepository<MatchingHistory
 
   MatchingHistory findByMatchingIdAndUserId(long matching_id, Long userId);
 
-  MatchingHistory findByUserIdAndMatchingStatusAndCreatedAtAfter(Long userId,
-      com.zb.meeteat.type.MatchingStatus matchingStatus, LocalDateTime localDateTime);
-
   List<MatchingHistory> findAllByUserIdAndCreatedAtIsAfter(Long id, LocalDateTime localDateTime);
+
+  MatchingHistory findFirstByUserIdAndStatusAndCreatedAtAfterOrderByCreatedAtDesc(Long userId,
+      com.zb.meeteat.type.MatchingStatus matchingStatus, LocalDateTime localDateTime);
 }

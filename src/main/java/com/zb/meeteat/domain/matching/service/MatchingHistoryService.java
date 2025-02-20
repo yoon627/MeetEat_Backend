@@ -20,12 +20,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MatchingHistoryService {
@@ -50,7 +52,8 @@ public class MatchingHistoryService {
 
       List<MatchingHistory> matchingHistoryList = matchingHistoryRepository.findAllByMatchingId(
           matchingHistory.getMatching().getId());
-
+      Matching matching = matchingRepository.findById(matchingHistory.getMatching().getId())
+          .orElseThrow();
       for (MatchingHistory history : matchingHistoryList) {
         User user = userRepository.findById(history.getUserId()).orElseThrow();
         RestaurantReview review = restaurantReviewRepository.findRestaurantReviewByMatchingHistoryId(
@@ -63,6 +66,7 @@ public class MatchingHistoryService {
             .introduce(user.getIntroduce())
             .review(review)
             .matchingCount(historyList.size())
+            .join(history.getJoin())
             .ban(banService.checkBan(userId, user.getId()))
             .report(reportService.checkReport(userId, user.getId(), history.getMatching().getId()))
             .build();
@@ -70,19 +74,26 @@ public class MatchingHistoryService {
         userList.add(userDto);
       }
 
-      return MatchingHistoryDto.toDto(matchingHistory, userList);
+      return MatchingHistoryDto.toDto(matchingHistory, userList, matching);
     });
   }
 
   public MatchingHistoryDto getRecentMatching() {
     Long userId = authService.getLoggedInUserId();
-    MatchingHistory matchingHistory = matchingHistoryRepository.findByUserIdAndMatchingStatusAndCreatedAtAfter(
+    MatchingHistory matchingHistory = matchingHistoryRepository.findFirstByUserIdAndStatusAndCreatedAtAfterOrderByCreatedAtDesc(
         userId,
         MatchingStatus.MATCHED,
         LocalDateTime.now().minusHours(1L));
     if (matchingHistory == null) {
       return null;
     }
+    log.info("@@@@@@@@@@ matching Id @@@@@@@@@@@@@");
+    Matching matching = matchingRepository.findById(matchingHistory.getMatching().getId())
+        .orElseThrow();
+    log.info("@@@@@@@@@@ matching Id:" + matching.getId());
+    log.info("@@@@@@@@@@ matching CreatedAt:" + matching.getCreatedAt());
+
+    matchingHistory.setMatching(matching);
     List<UserMatchingHistoryDto> userList = new ArrayList<>();
     List<MatchingHistory> matchingHistories = matchingHistoryRepository.findAllByMatchingId(
         matchingHistory.getMatching().getId());
@@ -92,10 +103,11 @@ public class MatchingHistoryService {
           matchingHistory.getId());
       UserMatchingHistoryDto userDto = UserMatchingHistoryDto.builder().id(history.getUserId())
           .nickname(user.getNickname())
+          .join(history.getJoin())
           .introduce(user.getIntroduce()).review(review).build();
       userList.add(userDto);
     }
-    return MatchingHistoryDto.toDto(matchingHistory, userList);
+    return MatchingHistoryDto.toDto(matchingHistory, userList, matching);
   }
 
   public void saveHistory(Matching matching, List<MatchingRequestDto> team) {
@@ -103,6 +115,7 @@ public class MatchingHistoryService {
       MatchingHistory matchingHistory = MatchingHistory.builder().status(MatchingStatus.MATCHED)
           .userId(matchingRequestDto.getUserId())
           .matching(matching)
+          .join(true)
           .build();
       matchingHistoryRepository.save(matchingHistory);
     }
@@ -112,16 +125,24 @@ public class MatchingHistoryService {
     Long userId = authService.getLoggedInUserId();
     MatchingHistory matchingHistory = matchingHistoryRepository.findByMatchingIdAndUserId(
         matchingId, userId);
+    matchingHistory.setJoin(false);
     LocalDateTime localDateTime = LocalDateTime.now().minusMinutes(3L);
+    boolean penaltyFlag = false;
     if (matchingHistory.getCreatedAt().isBefore(localDateTime)) {
-      User user = userRepository.findById(userId).orElseThrow();
-      user.setIsPenalty(true);
-      user.setBannedAt(LocalDateTime.now());
-      user.setBannedEndAt(LocalDateTime.now().plusDays(7L));
+      //TODO 패널티 제거
+//      User user = userRepository.findById(userId).orElseThrow();
+//      user.setIsPenalty(true);
+//      user.setBannedAt(LocalDateTime.now());
+//      user.setBannedEndAt(LocalDateTime.now().plusDays(7L));
+      penaltyFlag = true;
     }
+    //TODO 다른 사람들도 cancelled처리 해줘야댐
     Matching matching = matchingRepository.findById(matchingHistory.getMatching().getId())
         .orElseThrow();
-    matching.setStatus(MatchingStatus.CANCELLED);
+    if (!penaltyFlag) {
+      matching.setStatus(MatchingStatus.CANCELLED);
+      //TODO Escape처리를 어떻게 할지
+    }
     matchingRepository.save(matching);
     matchingHistory.setStatus(MatchingStatus.CANCELLED);
     matchingHistoryRepository.save(matchingHistory);
@@ -136,6 +157,10 @@ public class MatchingHistoryService {
           .build();
       userList.add(userDto);
     }
-    sseService.notifyCancelledMatching(matching, userList, userId);
+    if (penaltyFlag) {
+      sseService.notifyEscapedMatching(matching, userList, userId);
+    } else {
+      sseService.notifyCancelledMatching(matching, userList, userId);
+    }
   }
 }

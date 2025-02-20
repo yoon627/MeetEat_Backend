@@ -37,7 +37,9 @@ public class MatchingDto {
   }
 
   public static MatchingDto toDto(Matching entity, List<UserMatchingHistoryDto> userList) {
-    return MatchingDto.builder().count(entity.getCount()).status(entity.getStatus())
-        .restaurant(RestaurantDto.toDto(entity.getRestaurant())).userList(userList).build();
+    return MatchingDto.builder().id(entity.getId()).count(entity.getCount())
+        .status(entity.getStatus())
+        .restaurant(RestaurantDto.toDto(entity.getRestaurant())).userList(userList)
+        .createdAt(entity.getCreatedAt()).build();
   }
 }

@@ -23,4 +23,5 @@ public class UserMatchingHistoryDto {
   private Integer matchingCount;
   private Boolean ban;
   private Boolean report;
+  private Boolean join;
 }

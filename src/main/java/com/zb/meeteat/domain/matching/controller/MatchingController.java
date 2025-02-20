@@ -27,8 +27,11 @@ public class MatchingController {
 
   @PostMapping("/request")
   public MatchingResponseDto requestMatching(@RequestBody MatchingRequestDto matchingRequestDto) {
-    matchingService.requestMatching(matchingRequestDto);
-    return MatchingResponseDto.builder().message("Matching Started")
+    log.info("매칭 요청 신청이 컨트롤러에 옴");
+    String message =
+        matchingService.requestMatching(matchingRequestDto) ? "Matching Started" : "Banned User";
+    return MatchingResponseDto.builder()
+        .message("Matching Started")
         .restaurantDto(matchingRequestDto.getPlace()).build();
   }
 

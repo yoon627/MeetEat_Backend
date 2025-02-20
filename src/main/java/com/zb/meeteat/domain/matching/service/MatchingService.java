@@ -70,12 +70,18 @@ public class MatchingService {
 //    matchingRepository.save(MatchingDto.toEntity(matchingDto));
 //  }
 
-  public void requestMatching(MatchingRequestDto matchingRequestDto) {
+  public boolean requestMatching(MatchingRequestDto matchingRequestDto) {
+    log.info("매칭 요청 신청이 서비스에 옴");
     long userId = authService.getLoggedInUserId();
     User user = userRepository.findById(userId).orElseThrow(RuntimeException::new);
+    log.info("밴 확인");
+    log.info("밴 확인");
+    log.info("밴 확인");
     if (user.getBannedEndAt() != null && user.getBannedEndAt().isAfter(LocalDateTime.now())) {
-      //TODO 밴되었다고 알려주기
-      return;
+      log.info("밴된 유저");
+      log.info("밴된 유저");
+      log.info("밴된 유저");
+      return false;
     }
     cancelledUserSet.remove(userId);
     log.info("Matching requested: " + userId);
@@ -85,6 +91,7 @@ public class MatchingService {
     matchingRequestDto.setUserId(userId);
     redisService.addMatchingQueue(matchingRequestDto);
     log.info("매칭 요청 처리 완료: userId={}, matchingRequestDto={}", userId, matchingRequestDto);
+    return true;
   }
 
   public void cancelMatching() {
@@ -194,7 +201,6 @@ public class MatchingService {
           }
           log.info("생성된 임시 팀이 모두 동의하지 않아 해체됨: teamId={}", joinRequestDto.getTeamId());
           teamIdPq.add(joinRequestDto.getTeamId());
-          return;
         }
       } else {
         tmpTeamResponseCountMap.put(teamName, tmpTeamResponseCountMap.get(teamName) + 1);

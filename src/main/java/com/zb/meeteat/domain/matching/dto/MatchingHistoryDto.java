@@ -1,5 +1,6 @@
 package com.zb.meeteat.domain.matching.dto;
 
+import com.zb.meeteat.domain.matching.entity.Matching;
 import com.zb.meeteat.domain.matching.entity.MatchingHistory;
 import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.type.MatchingStatus;
@@ -25,12 +26,12 @@ public class MatchingHistoryDto {
   private LocalDateTime createdAt;
 
   public static MatchingHistoryDto toDto(MatchingHistory matchingHistory,
-      List<UserMatchingHistoryDto> userList) {
+      List<UserMatchingHistoryDto> userList, Matching matching) {
     return MatchingHistoryDto.builder()
         .id(matchingHistory.getId())
         .userId(matchingHistory.getUserId())
         .matchingStatus(matchingHistory.getStatus())
-        .matching(MatchingDto.toDto(matchingHistory.getMatching(), userList))
+        .matching(MatchingDto.toDto(matching, userList))
         .createdAt(matchingHistory.getCreatedAt()).build();
   }
 

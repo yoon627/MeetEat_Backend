@@ -97,7 +97,8 @@ public class SseService {
     if (emitter != null) {
       log.info("tempTeamJoin emitter: null 아님 {}", emitter);
       try {
-        User user = userRepository.findById(userId).orElseThrow(RuntimeException::new);
+        User user = userRepository.findById(joinRequestDto.getUserId())
+            .orElseThrow(RuntimeException::new);
         UserJoinDto userJoinDto = UserJoinDto.builder()
             .id(userId)
             .nickname(user.getNickname())
@@ -143,7 +144,7 @@ public class SseService {
     for (MatchingRequestDto m : team) {
       User user = userRepository.findById(m.getUserId()).orElseThrow(RuntimeException::new);
       userList.add(UserMatchingHistoryDto.builder().id(m.getUserId()).nickname(user.getNickname())
-          .introduce(user.getIntroduce()).build());
+          .introduce(user.getIntroduce()).join(true).build());
     }
     TeamResponseDto teamResponseDto = TeamResponseDto.builder().message("팀 생성이 완료되었습니다.")
         .matching(
@@ -151,6 +152,14 @@ public class SseService {
                 .createdAt(matching.getCreatedAt())
                 .build())
         .build();
+    log.info("생성된 Team Id: {}", teamResponseDto.getMatching().getId());
+    log.info("생성된 Team Id: {}", teamResponseDto.getMatching().getId());
+    log.info("생성된 Team Id: {}", teamResponseDto.getMatching().getId());
+    log.info("생성된 Team Id: {}", teamResponseDto.getMatching().getId());
+    log.info("생성된 Team Id: {}", teamResponseDto.getMatching().getId());
+    log.info("생성된 Team Id: {}", teamResponseDto.getMatching().getId());
+    log.info("생성된 Team Id: {}", teamResponseDto.getMatching().getId());
+    log.info("생성된 Team Id: {}", teamResponseDto.getMatching().getId());
     for (MatchingRequestDto matchingRequestDto : team) {
       sendTeamEvent(matchingRequestDto.getUserId(), teamResponseDto);
     }
@@ -212,6 +221,33 @@ public class SseService {
         try {
           log.info("매칭 취소 알림 보내기 중: {}", emitter);
           emitter.send(SseEmitter.event().name("cancel").data(cancelledUserId));
+          log.info("매칭 취소 알림 보내기 완료:{}", emitter);
+        } catch (IOException e) {
+          emitter.complete();
+          sseEmitterMap.remove(userId);
+          log.info("Team emitter 연결 끊기: {}", emitter);
+        }
+      } else {
+        log.info("emitter: null임 {}", emitter);
+
+      }
+    }
+  }
+
+  public void notifyEscapedMatching(Matching matching, List<UserMatchingHistoryDto> userList,
+      Long cancelledUserId) {
+    for (UserMatchingHistoryDto userMatchingHistoryDto : userList) {
+      long userId = userMatchingHistoryDto.getId();
+      if (userId == cancelledUserId) {
+        continue;
+      }
+      SseEmitter emitter = sseEmitterMap.get(userId);
+      log.info("team emitter: {}", emitter);
+      if (emitter != null) {
+        log.info("emitter: null아님 {}", emitter);
+        try {
+          log.info("매칭 취소 알림 보내기 중: {}", emitter);
+          emitter.send(SseEmitter.event().name("escape").data(cancelledUserId));
           log.info("매칭 취소 알림 보내기 완료:{}", emitter);
         } catch (IOException e) {
           emitter.complete();
