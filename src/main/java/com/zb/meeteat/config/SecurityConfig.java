@@ -47,13 +47,14 @@ public class SecurityConfig {
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(HttpMethod.POST, "/api/users/signup", "/api/users/signin",
-                    "/api/users/signin/*", "api/restaurants/search")
-                .permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/restaurants/{restaurantId}",
-                    "/api/restaurants/{restaurantId}/reviews").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/users/change-password").authenticated() // 인증 필요
-                .anyRequest().authenticated()
+//                .requestMatchers(HttpMethod.POST, "/api/users/signup", "/api/users/signin",
+//                    "/api/users/signin/*", "api/restaurants/search")
+//                .permitAll()
+//                .requestMatchers(HttpMethod.GET, "/api/restaurants/{restaurantId}",
+//                    "/api/restaurants/{restaurantId}/reviews").permitAll()
+//                .requestMatchers(HttpMethod.POST, "/api/users/change-password").authenticated() // 인증 필요
+//                .anyRequest().authenticated()
+                .requestMatchers("/**").permitAll() //모든 요청 허용 (테스트용)
         )
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
 
