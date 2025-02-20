@@ -10,7 +10,6 @@ import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
 import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.exception.ErrorCode;
-import com.zb.meeteat.exception.ErrorCode;
 import com.zb.meeteat.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +17,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -94,10 +91,16 @@ public class AuthService {
     String jwt = token.replace("Bearer ", "");
 
     if (!jwtUtil.validateToken(jwt)) {
+      log.error("로그인 직후 발급된 토큰이 유효하지 않음: {}", token);
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
 
     jwtUtil.blacklistToken(jwt);
+    log.info("블랙리스트 등록된 토큰: {}", jwt);
+
+    // Redis에서 블랙리스트 확인
+    boolean isBlacklisted = jwtUtil.isBlacklisted(jwt);
+    log.info("로그아웃 후 블랙리스트 여부: {}", isBlacklisted);
   }
 
   @Transactional

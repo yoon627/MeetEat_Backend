@@ -20,7 +20,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 @Setter
 @NoArgsConstructor
@@ -93,25 +95,28 @@ public class User {
   public static User ofKakao(KakaoUserResponse response) {
     String email = response.getKakaoAccount().getEmail();
     String nickname = response.getKakaoAccount().getNickname();
+    String introduce = "안녕하세요! MeetEat을 이용해주셔서 감사합니다.";
 
-    // 이메일이 없을 경우 임시 이메일 설정
     if (email == null || email.isEmpty()) {
       email = "kakao_" + UUID.randomUUID().toString().substring(0, 8) + "@temp.com";
     }
 
-    // 닉네임이 없을 경우 기본 닉네임 설정
     if (nickname == null || nickname.isEmpty()) {
-      nickname = "카카오사용자_" + UUID.randomUUID().toString().substring(0, 6);
+      nickname = UUID.randomUUID().toString().substring(0, 6);
     }
+
+    log.info("카카오 사용자 생성 - 이메일: {}, 닉네임: {}, 소개: {}", email, nickname, introduce);
 
     return User.builder()
         .email(email)
         .nickname(nickname)
-        .password(UUID.randomUUID().toString())  // 랜덤 더미 비밀번호 설정
+        .introduce(introduce)  // 기본 소개 추가
+        .password(UUID.randomUUID().toString())  // 더미 비밀번호 설정
         .signupType(SignUpType.KAKAO)
         .role(Role.USER)
         .build();
   }
+
 
   public static User ofNaver(NaverUserResponse response) {
     String email = response.getResponse().getEmail();
@@ -122,7 +127,7 @@ public class User {
     }
 
     if (nickname == null || nickname.isEmpty()) {
-      nickname = "네이버사용자_" + UUID.randomUUID().toString().substring(0, 6);
+      nickname = UUID.randomUUID().toString().substring(0, 6);
     }
 
     return User.builder()
@@ -143,6 +148,21 @@ public class User {
     this.introduce = newIntroduce;
     this.updatedAt = LocalDateTime.now();
   }
+
+  public void updateFromKakao(KakaoUserResponse response) {
+    String newNickname = response.getKakaoAccount().getNickname();
+    if (newNickname != null && !newNickname.isEmpty()) {
+      this.nickname = newNickname;
+    }
+  }
+
+  public void updateFromNaver(NaverUserResponse response) {
+    String newNickname = response.getResponse().getNickname();
+    if (newNickname != null && !newNickname.isEmpty()) {
+      this.nickname = newNickname;
+    }
+  }
+
 
 
 }
