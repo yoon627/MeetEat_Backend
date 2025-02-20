@@ -22,8 +22,8 @@ public class CorsConfig {
     // 모든 HTTP 메서드 허용 (GET, POST, PUT, DELETE 등)
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH" ));
 
-    // 헤더 허용
-    config.setAllowedHeaders(List.of("*"));
+    // 허용할 헤더를 특정 값으로 제한
+    config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
     // 자격 증명 허용 (Authorization 헤더 포함)
     config.setAllowCredentials(true);
