@@ -19,6 +19,7 @@ public class CorsConfig {
     // 모든 출처에서 요청 허용 (보안상 운영에서는 특정 출처만 허용해야 함)
     config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000", "https://meet--eat.com"));
 
+
     // 모든 HTTP 메서드 허용 (GET, POST, PUT, DELETE 등)
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH" ));
 
