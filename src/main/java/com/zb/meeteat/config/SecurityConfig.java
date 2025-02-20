@@ -42,14 +42,13 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
-        //.cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .cors(Customizer.withDefaults())
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(HttpMethod.POST, "/api/users/signup", "/api/users/signin",
-                    "/api/users/signin/*", "api/restaurants/search", "api/restaurants/{restaurantId}")
+                    "/api/users/signin/*", "api/restaurants/search")
                 .permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/restaurants/{restaurantId}",
                     "/api/restaurants/{restaurantId}/reviews").permitAll()
