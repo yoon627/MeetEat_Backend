@@ -1,6 +1,9 @@
 package com.zb.meeteat.domain.matching.entity;
 
+import com.zb.meeteat.type.MatchingStatus;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -16,6 +19,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Getter
 @Setter
@@ -23,6 +28,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "matchinghistory")
 public class MatchingHistory {
 
@@ -32,6 +38,8 @@ public class MatchingHistory {
 
   @Enumerated(EnumType.STRING)
   private MatchingStatus status;  // 매칭 상태
+  @CreatedDate
+  @Column(nullable = false)
   private LocalDateTime createdAt;  // 생성일자
 
   @JoinColumn(name = "userId", nullable = false)
@@ -40,4 +48,7 @@ public class MatchingHistory {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "matchingId", nullable = false)
   private Matching matching; // 매칭 모임 아이디
+
+  @Column(name = "is_joined")
+  private Boolean join;
 }
