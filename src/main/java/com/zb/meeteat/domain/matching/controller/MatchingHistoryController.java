@@ -39,4 +39,9 @@ public class MatchingHistoryController {
     return ResponseEntity.ok(null);
   }
 
+  @PostMapping("/history/{matchingHistoryId}")
+  public void reviewLaterMatchingHistory(@PathVariable long matchingHistoryId) {
+    matchingHistoryService.reviewLaterMatchingHistory(matchingHistoryId);
+  }
+
 }

@@ -1,7 +1,7 @@
 package com.zb.meeteat.domain.matching.repository;
 
 import com.zb.meeteat.domain.matching.entity.MatchingHistory;
-import com.zb.meeteat.domain.matching.entity.MatchingStatus;
+import com.zb.meeteat.type.MatchingStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -21,5 +21,5 @@ public interface MatchingHistoryRepository extends JpaRepository<MatchingHistory
   List<MatchingHistory> findAllByUserIdAndCreatedAtIsAfter(Long id, LocalDateTime localDateTime);
 
   MatchingHistory findFirstByUserIdAndStatusAndCreatedAtAfterOrderByCreatedAtDesc(Long userId,
-      com.zb.meeteat.type.MatchingStatus matchingStatus, LocalDateTime localDateTime);
+      MatchingStatus status, LocalDateTime createdAt);
 }

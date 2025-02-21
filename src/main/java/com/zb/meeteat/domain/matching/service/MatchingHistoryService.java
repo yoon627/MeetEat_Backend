@@ -107,7 +107,8 @@ public class MatchingHistoryService {
           .introduce(user.getIntroduce()).review(review).build();
       userList.add(userDto);
     }
-    return MatchingHistoryDto.toDto(matchingHistory, userList, matching);
+    return matchingHistory.getReviewLater() ? null
+        : MatchingHistoryDto.toDto(matchingHistory, userList, matching);
   }
 
   public void saveHistory(Matching matching, List<MatchingRequestDto> team) {
@@ -151,6 +152,10 @@ public class MatchingHistoryService {
         matchingHistory.getMatching().getId());
     for (MatchingHistory history : matchingHistoryList) {
       //TODO 리팩터링
+      if (!penaltyFlag) {
+        history.setStatus(MatchingStatus.CANCELLED);
+        matchingHistoryRepository.save(history);
+      }
       User user = userRepository.findById(history.getUserId()).orElseThrow();
       UserMatchingHistoryDto userDto = UserMatchingHistoryDto.builder()
           .id(user.getId())
@@ -162,5 +167,12 @@ public class MatchingHistoryService {
     } else {
       sseService.notifyCancelledMatching(matching, userList, userId);
     }
+  }
+
+  public void reviewLaterMatchingHistory(long matchingHistoryId) {
+    MatchingHistory matchingHistory = matchingHistoryRepository.findById(matchingHistoryId)
+        .orElseThrow(() -> new RuntimeException("matching history not found"));
+    matchingHistory.setReviewLater(true);
+    matchingHistoryRepository.save(matchingHistory);
   }
 }
