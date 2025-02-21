@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
@@ -233,7 +234,8 @@ public class MatchingService {
   @Transactional
   public void makeTeam(List<MatchingRequestDto> team) {
     log.info("팀 생성 완료: team={}", team);
-    RestaurantDto restaurantDto = team.getFirst().getPlace();
+//    RestaurantDto restaurantDto = team.getFirst().getPlace();
+    RestaurantDto restaurantDto = chooseRestaurant(team);
     log.info("팀 생성 후 선정된 식당: restaurantDto={}", restaurantDto);
     Restaurant restaurant = restaurantService.saveRestaurant(restaurantDto);
     log.info("Restaurant Id after Saving " + restaurant.getId());
@@ -323,4 +325,9 @@ public class MatchingService {
     return EARTH_RADIUS * c;
   }
 
+  private RestaurantDto chooseRestaurant(List<MatchingRequestDto> team) {
+    Random random = new Random();
+    int randomIndex = random.nextInt(team.size()); // 0부터 team.size()-1 사이의 랜덤 인덱스 선택
+    return team.get(randomIndex).getPlace();
+  }
 }
