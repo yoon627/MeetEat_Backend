@@ -5,6 +5,7 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberTemplate;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.zb.meeteat.domain.restaurant.dto.Category;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
 import com.zb.meeteat.domain.restaurant.dto.Sort;
@@ -34,7 +35,9 @@ public class RestaurantRepositoryCustomImpl implements RestaurantRepositoryCusto
 
     BooleanBuilder builder = new BooleanBuilder();
     builder.and(restaurant.roadAddressName.contains(String.valueOf(searchRequest.getRegion())));
-    builder.and(restaurant.categoryName.contains(String.valueOf(searchRequest.getCategoryName())));
+    if (!searchRequest.getCategoryName().equals(Category.전체)) {
+      builder.and(restaurant.categoryName.contains(String.valueOf(searchRequest.getCategoryName())));
+    }
     builder.and(restaurant.placeName.contains(searchRequest.getPlaceName()));
 
     JPAQuery<Restaurant> jpaQuery = queryFactory.select(restaurant)
