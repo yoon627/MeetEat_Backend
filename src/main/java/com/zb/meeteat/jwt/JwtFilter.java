@@ -11,12 +11,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
@@ -31,7 +33,7 @@ public class JwtFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
 
     String token = request.getHeader("Authorization");
-
+    log.info("token: {}", token);
     if (token != null && token.startsWith("Bearer ")) {
       String jwt = token.replace("Bearer ", "");
 
@@ -45,13 +47,20 @@ public class JwtFilter extends OncePerRequestFilter {
         Long userId = jwtUtil.getUserId(jwt); // 토큰에서 사용자 ID 가져오기
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        log.info("token validated: {}", token);
 
         // 3. SecurityContext에 인증 정보 저장
         UserDetails userDetails = new UserDetailsImpl(user);
         UsernamePasswordAuthenticationToken authentication =
             new UsernamePasswordAuthenticationToken(userDetails, null,
                 userDetails.getAuthorities());
+        log.info("Authentication before setting: {}",
+            SecurityContextHolder.getContext().getAuthentication());
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        log.info("Authentication after setting: {}",
+            SecurityContextHolder.getContext().getAuthentication());
       }
     }
 

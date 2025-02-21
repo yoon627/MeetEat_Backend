@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.stream.Stream;
 
 public enum Sort {
-  DEFAUT,
+  DEFAULT,
   RATING, // 오름차순
   DISTANCE; // 내림차순
 
