@@ -52,6 +52,5 @@ public class MatchingHistory {
   @Column(name = "is_joined")
   private Boolean join;
 
-  @Column(name = "review_later", nullable = false)
-  private Boolean reviewLater = false;
+  private Boolean reviewLater;
 }

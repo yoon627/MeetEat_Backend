@@ -47,20 +47,16 @@ public class SecurityConfig {
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(HttpMethod.POST, "/api/users/signup", "/api/users/signin",
-                    "/api/users/signout",
-                    "/api/users/signin/*", "api/restaurants/{restaurantId}")
-                .permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/restaurants/{restaurantId}",
-                    "/api/restaurants/{restaurantId}/reviews").permitAll()
-//            .requestMatchers(HttpMethod.POST, "/api/users/change-password", "/api/matching/request",
-//                "/api/matching/join", "/api/matching/cancel")
-//            .authenticated() // 인증 필요
-//            .requestMatchers(HttpMethod.GET, "/api/sse/subscribe",
-//                "/api/restaurants/{restaurantId}", "/api/restaurants/{restaurantId}/reviews")
-//            .authenticated()
-//            .requestMatchers(HttpMethod.DELETE, "/api/report").authenticated()
-                .anyRequest().authenticated()
+            .requestMatchers(HttpMethod.POST,
+                "/api/users/signup",
+                "/api/users/signin",
+                "/api/users/signout",
+                "/api/users/signin/*",
+                "api/restaurants/{restaurantId}")
+            .permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/restaurants/{restaurantId}",
+                "/api/restaurants/{restaurantId}/reviews").permitAll()
+            .anyRequest().authenticated()
         )
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
 
@@ -76,7 +72,6 @@ public class SecurityConfig {
   protected CorsConfigurationSource corsConfigurationSource() {
 
     CorsConfiguration corsConfigurationV1 = new CorsConfiguration();
-    corsConfigurationV1.addAllowedOrigin("*"); // 명확한 Origin 명시
     corsConfigurationV1.addAllowedOriginPattern(
         "http://localhost:5173/**"); // 명확한 Origin 명시
     corsConfigurationV1.addAllowedOriginPattern(
@@ -85,6 +80,7 @@ public class SecurityConfig {
         "https://meet--eat.com/**"); // 명확한 Origin 명시
     corsConfigurationV1.addAllowedMethod("*");
     corsConfigurationV1.addAllowedHeader("*");
+    corsConfigurationV1.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", corsConfigurationV1);

@@ -107,7 +107,7 @@ public class MatchingHistoryService {
           .introduce(user.getIntroduce()).review(review).build();
       userList.add(userDto);
     }
-    return matchingHistory.getReviewLater() ? null
+    return matchingHistory.getReviewLater() != null ? null
         : MatchingHistoryDto.toDto(matchingHistory, userList, matching);
   }
 
