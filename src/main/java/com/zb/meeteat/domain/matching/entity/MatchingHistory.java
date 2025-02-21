@@ -49,5 +49,6 @@ public class MatchingHistory {
   @JoinColumn(name = "matchingId", nullable = false)
   private Matching matching; // 매칭 모임 아이디
 
+  @Column(name = "is_joined")
   private Boolean join;
 }
