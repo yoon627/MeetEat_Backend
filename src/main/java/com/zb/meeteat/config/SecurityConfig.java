@@ -16,8 +16,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * 보안 설정을 위한 클래스 비밀번호 암호화를 위해 BCryptPasswordEncoder를 빈으로 등록
@@ -49,18 +47,17 @@ public class SecurityConfig {
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(HttpMethod.POST, "/api/users/signup", "/api/users/signin",
-                    "/api/users/signout",
-                    "/api/users/signin/*", "api/restaurants/search", "api/restaurants/{restaurantId}")
-                .permitAll()
-//            .requestMatchers(HttpMethod.POST, "/api/users/change-password", "/api/matching/request",
-//                "/api/matching/join", "/api/matching/cancel")
-//            .authenticated() // 인증 필요
-//            .requestMatchers(HttpMethod.GET, "/api/sse/subscribe",
-//                "/api/restaurants/{restaurantId}", "/api/restaurants/{restaurantId}/reviews")
-//            .authenticated()
-//            .requestMatchers(HttpMethod.DELETE, "/api/report").authenticated()
-                .anyRequest().authenticated()
+            .requestMatchers(HttpMethod.POST, "/api/users/signup", "/api/users/signin",
+                "/api/users/signout",
+                "/api/users/signin/*", "api/restaurants/search", "api/restaurants/{restaurantId}").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/users/change-password", "/api/matching/request",
+                "/api/matching/join", "/api/matching/cancel")
+            .authenticated() // 인증 필요
+            .requestMatchers(HttpMethod.GET, "/api/sse/subscribe",
+                "/api/restaurants/{restaurantId}", "/api/restaurants/{restaurantId}/reviews")
+            .authenticated()
+            .requestMatchers(HttpMethod.DELETE, "/api/report").authenticated()
+            .anyRequest().authenticated()
         )
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
 
