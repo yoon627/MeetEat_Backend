@@ -12,16 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface RestaurantReviewRepository extends JpaRepository<RestaurantReview, Long> {
-
-  @Query(value = "SELECT r.id, r.rating, r.description, r.img_url as imgUrl, u.nickname, "
-      + "DATE_FORMAT(r.created_at, '%Y-%m-%d %H:%i:%s') AS created_at "
-      + "FROM RestaurantReview r "
-      + "JOIN user u ON r.user_id = u.id "
-      + "WHERE r.restaurant_id = :restaurantId ORDER BY r.id DESC"
-      , nativeQuery = true)
-  Page<RestaurantReviewsResponse> getRestaurantReviewByRestaurantId(
-      @Param("restaurantId") Long restaurantId, Pageable pageable);
+public interface RestaurantReviewRepository extends JpaRepository<RestaurantReview, Long>, RestaurantReviewRepositoryCustom {
 
   RestaurantReview findRestaurantReviewByMatchingHistoryId(Long matchingHistoryId);
 

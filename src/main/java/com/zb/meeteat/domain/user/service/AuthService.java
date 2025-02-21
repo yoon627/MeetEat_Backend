@@ -93,11 +93,17 @@ public class AuthService {
   public void signout(String token) {
     String jwt = token.replace("Bearer ", "");
 
-//    if (!jwtUtil.validateToken(jwt)) {
-//      throw new CustomException(ErrorCode.INVALID_TOKEN);
-//    }
+    if (!jwtUtil.validateToken(jwt)) {
+      log.error("로그인 직후 발급된 토큰이 유효하지 않음: {}", token);
+      throw new CustomException(ErrorCode.INVALID_TOKEN);
+    }
 
-//    jwtUtil.blacklistToken(jwt);
+    jwtUtil.blacklistToken(jwt);
+    log.info("블랙리스트 등록된 토큰: {}", jwt);
+
+    // Redis에서 블랙리스트 확인
+    boolean isBlacklisted = jwtUtil.isBlacklisted(jwt);
+    log.info("로그아웃 후 블랙리스트 여부: {}", isBlacklisted);
   }
 
   @Transactional

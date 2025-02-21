@@ -39,6 +39,7 @@ public class AuthController {
   // 회원가입
   @PostMapping("/signup")
   public ResponseEntity<String> signup(@Valid @RequestBody SignupRequestDto requestDto) {
+    log.info("회원가입 요청 데이터: {}", requestDto.toString());
     authService.signup(requestDto);
     return ResponseEntity.ok().build();
   }
@@ -47,6 +48,7 @@ public class AuthController {
   @PostMapping("/signin")
   public ResponseEntity<AuthCodeResponseDto> signin(
       @Valid @RequestBody SigninRequestDto requestDto) {
+    log.info("CORS가 적용된 POST 요청이 들어왔습니다. /users/signin/kakao");
     return ResponseEntity.ok(authService.signin(requestDto));
   }
 
