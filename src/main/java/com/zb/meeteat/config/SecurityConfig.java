@@ -68,10 +68,15 @@ public class SecurityConfig {
    *
    * @return CorsConfigurationSource
    */
+
   @Bean
   protected CorsConfigurationSource corsConfigurationSource() {
 
     CorsConfiguration corsConfigurationV1 = new CorsConfiguration();
+
+    corsConfigurationV1.addAllowedOriginPattern(
+        "http://localhost:5173");
+
     corsConfigurationV1.addAllowedOriginPattern(
         "http://localhost:5173/**"); // 명확한 Origin 명시
     corsConfigurationV1.addAllowedOriginPattern(
