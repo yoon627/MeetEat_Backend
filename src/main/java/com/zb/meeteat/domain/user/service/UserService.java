@@ -1,12 +1,12 @@
 package com.zb.meeteat.domain.user.service;
 
-import com.zb.meeteat.domain.matching.entity.MatchingStatus;
 import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
 import com.zb.meeteat.domain.user.dto.UserProfileResponse;
 import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
 import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.exception.ErrorCode;
+import com.zb.meeteat.type.MatchingStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;

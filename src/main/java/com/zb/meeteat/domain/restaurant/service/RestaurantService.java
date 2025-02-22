@@ -58,8 +58,6 @@ public class RestaurantService {
   }
 
   public Page<RestaurantResponse> getRestaurantList(SearchRequest search) {
-    String categoryName =
-        Category.전체.equals(search.getCategoryName()) ? "" : search.getCategoryName().toString();
 
     // Pageable 객체 생성 (페이지, 사이즈, 정렬 방식)
     Pageable pageable = PageRequest.of(search.getPage(), search.getSize());
