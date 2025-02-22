@@ -69,11 +69,13 @@ public class SecurityConfig {
    *
    * @return CorsConfigurationSource
    */
+
   @Bean
   protected CorsConfigurationSource corsConfigurationSource() {
 
     CorsConfiguration corsConfigurationV1 = new CorsConfiguration();
-    corsConfigurationV1.addAllowedOrigin("*"); // 명확한 Origin 명시
+    corsConfigurationV1.addAllowedOriginPattern(
+        "http://localhost:5173");
     corsConfigurationV1.addAllowedOriginPattern(
         "http://localhost:5173/**"); // 명확한 Origin 명시
     corsConfigurationV1.addAllowedOriginPattern(
@@ -82,6 +84,7 @@ public class SecurityConfig {
         "https://meet--eat.com/**"); // 명확한 Origin 명시
     corsConfigurationV1.addAllowedMethod("*");
     corsConfigurationV1.addAllowedHeader("*");
+    corsConfigurationV1.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", corsConfigurationV1);
