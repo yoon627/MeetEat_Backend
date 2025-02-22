@@ -2,9 +2,7 @@ package com.zb.meeteat.domain.restaurant.service;
 
 import com.zb.meeteat.domain.matching.entity.Matching;
 import com.zb.meeteat.domain.matching.entity.MatchingHistory;
-import com.zb.meeteat.domain.matching.entity.MatchingStatus;
 import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
-import com.zb.meeteat.domain.restaurant.dto.Category;
 import com.zb.meeteat.domain.restaurant.dto.CreateReviewRequest;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantDto;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantMyReviewResponse;
@@ -20,6 +18,7 @@ import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
 import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.exception.ErrorCode;
+import com.zb.meeteat.type.MatchingStatus;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -113,8 +112,8 @@ public class RestaurantService {
         .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
 
     Matching matching = history.getMatching();
-    if (matching.getStatus().equals(MatchingStatus.CANCELED)
-        || history.getStatus().equals(MatchingStatus.CANCELED)) {
+    if (matching.getStatus().equals(MatchingStatus.CANCELLED)
+        || history.getStatus().equals(MatchingStatus.CANCELLED)) {
       throw new CustomException(ErrorCode.REVIEW_NOT_ALLOWED_FOR_CANCELED_MATCHING);
     }
 
@@ -154,8 +153,8 @@ public class RestaurantService {
     }
 
     Matching matching = history.getMatching();
-    if (history.getStatus().equals(MatchingStatus.CANCELED) ||
-        matching.getStatus().equals(MatchingStatus.CANCELED)) {
+    if (history.getStatus().equals(MatchingStatus.CANCELLED) ||
+        matching.getStatus().equals(MatchingStatus.CANCELLED)) {
       throw new CustomException(ErrorCode.CANCELED_MATCHING);
     }
 
