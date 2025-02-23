@@ -175,9 +175,9 @@ public class RestaurantService {
         .build();
   }
 
-  private String saveImage(MultipartFile[] files) {
-    if (files.length > MAX_FILE_COUNT || files.length < 1
-        || files[0].isEmpty() || Objects.requireNonNull(files[0].getOriginalFilename()).isEmpty()) {
+  private String saveImage(List<MultipartFile> files) {
+    if (files == null || files.isEmpty() || files.size() > MAX_FILE_COUNT
+        || files.getFirst().isEmpty() || Objects.requireNonNull(files.getFirst().getOriginalFilename()).isEmpty()) {
       return null;
     }
 
