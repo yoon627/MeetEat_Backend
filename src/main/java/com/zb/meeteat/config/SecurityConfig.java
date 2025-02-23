@@ -52,7 +52,7 @@ public class SecurityConfig {
                 "/api/users/signin",
                 "/api/users/signout",
                 "/api/users/signin/*",
-                "api/restaurants/{restaurantId}")
+                "api/restaurants/search")
             .permitAll()
             .requestMatchers(HttpMethod.GET, "/api/restaurants/{restaurantId}",
                 "/api/restaurants/{restaurantId}/reviews").permitAll()
@@ -68,10 +68,15 @@ public class SecurityConfig {
    *
    * @return CorsConfigurationSource
    */
+
   @Bean
   protected CorsConfigurationSource corsConfigurationSource() {
 
     CorsConfiguration corsConfigurationV1 = new CorsConfiguration();
+
+    corsConfigurationV1.addAllowedOriginPattern(
+        "http://localhost:5173");
+
     corsConfigurationV1.addAllowedOriginPattern(
         "http://localhost:5173/**"); // 명확한 Origin 명시
     corsConfigurationV1.addAllowedOriginPattern(
