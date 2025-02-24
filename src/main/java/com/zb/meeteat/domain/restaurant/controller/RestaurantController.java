@@ -5,16 +5,13 @@ import com.zb.meeteat.domain.restaurant.dto.RestaurantMyReviewResponse;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantResponse;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantReviewsResponse;
 import com.zb.meeteat.domain.restaurant.dto.SearchRequest;
-import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.service.RestaurantService;
 import com.zb.meeteat.exception.CustomException;
 import com.zb.meeteat.jwt.JwtUtil;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -24,9 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -65,13 +60,11 @@ public class RestaurantController {
         restaurantService.getRestaurantReviews(restaurantId, page, size));
   }
 
-  @PostMapping(value = "/review", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "/review")
   public ResponseEntity createReview(
       @RequestHeader("Authorization") String token,
-      @Valid @RequestPart CreateReviewRequest review,
-      @RequestPart(value = "files", required = false) List<MultipartFile> files) throws CustomException {
+      @Valid @ModelAttribute CreateReviewRequest review) throws CustomException {
     long userId = jwtUtil.getUserId(token.replace("Bearer ", ""));
-    review.setFiles(files);
 
     restaurantService.createReview(userId, review);
     return ResponseEntity.ok().build();
