@@ -47,13 +47,23 @@ public class GlobalExceptionHandler {
   }
 
 
-  // 예상치 못한 예외 발생 시 500 응답을 반환
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<String> handleGeneralException(Exception e) {
+  public ResponseEntity<Map<String, Object>> handleGeneralException(Exception e) {
     log.error("서버 오류 발생: {}", e.getMessage(), e);
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body("서버에 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+
+    // CustomException이지만 잘못해서 여기로 들어온 경우 확인
+    if (e instanceof CustomException customException) {
+      return handleCustomException(customException);
+    }
+
+    Map<String, Object> errorResponse = new HashMap<>();
+    errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    errorResponse.put("error", "INTERNAL_SERVER_ERROR");
+    errorResponse.put("message", e.getMessage()); // 원래 예외 메시지 유지
+
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
   }
+
 
   @ExceptionHandler(CustomException.class)
   public ResponseEntity<Map<String, Object>> handleCustomException(CustomException ex) {
