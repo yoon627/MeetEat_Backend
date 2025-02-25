@@ -39,7 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class RestaurantService {
 
   private static int MAX_FILE_COUNT = 7;
-  private static int AFTER_MATCHING_TIME = 2;
+  private static int AFTER_MATCHING_TIME = 1;
   private final S3ImageUpload s3ImageUpload;
   private final RestaurantRepository restaurantRepository;
   private final RestaurantReviewRepository restaurantReviewRepository;
@@ -117,7 +117,7 @@ public class RestaurantService {
       throw new CustomException(ErrorCode.REVIEW_NOT_ALLOWED_FOR_CANCELED_MATCHING);
     }
 
-    // 3. 후기 작성 시간 확인 (매칭 약속시간 이후 2시간)
+    // 3. 후기 작성 시간 확인 (매칭 약속시간 이후 1시간)
     LocalDateTime matchingTime = matching.getCreatedAt();
     LocalDateTime currentTime = LocalDateTime.now();
     Duration duration = Duration.between(matchingTime, currentTime);
