@@ -31,7 +31,8 @@ public class MatchingHistoryDto {
         .id(matchingHistory.getId())
         .userId(matchingHistory.getUserId())
         .matchingStatus(matchingHistory.getStatus())
-        .matching(MatchingDto.toDto(matching, userList))
+        .matching(MatchingDto.toDto(matchingHistory.getMatching(), userList))
+//        .matching(MatchingDto.toDto(matching, userList))
         .createdAt(matchingHistory.getCreatedAt()).build();
   }
 

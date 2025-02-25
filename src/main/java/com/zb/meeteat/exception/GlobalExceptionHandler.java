@@ -18,7 +18,8 @@ public class GlobalExceptionHandler {
 
   // `@Valid` 유효성 검사 실패 (비밀번호 형식 오류 등)
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException e) {
+  public ResponseEntity<Map<String, Object>> handleValidationException(
+      MethodArgumentNotValidException e) {
     BindingResult bindingResult = e.getBindingResult();
 
     // 첫 번째 에러만 가져옴 (여러 개가 있을 경우)
@@ -66,8 +67,9 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(CustomException.class)
   public ResponseEntity<Map<String, Object>> handleCustomException(CustomException ex) {
+    log.error(ex.getMessage(), ex);
+    log.error(String.valueOf(ex.getErrorCode()), ex);
     ErrorCode errorCode = ex.getErrorCode();
-
     Map<String, Object> errorResponse = new HashMap<>();
     errorResponse.put("status", errorCode.getStatus().value());
     errorResponse.put("error", errorCode.getCode());

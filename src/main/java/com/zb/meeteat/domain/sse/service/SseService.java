@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,8 @@ public class SseService {
   private final AuthService authService;
   private final Map<Long, SseEmitter> sseEmitterMap = new ConcurrentHashMap<>();
   private final UserRepository userRepository;
+  private final Set<Long> cancelledUserSet = ConcurrentHashMap.newKeySet();//취소한 유저가 계산되고 있는 경우를 체크하기 위해
+
 
   public SseEmitter subscribe() {
     long userId = authService.getLoggedInUserId();
@@ -259,5 +262,28 @@ public class SseService {
 
       }
     }
+  }
+
+  public void addCancelledUserSet(long userId) {
+    cancelledUserSet.add(userId);
+  }
+
+  public void removeCancelledUserSet(long userId) {
+    cancelledUserSet.remove(userId);
+  }
+
+  public boolean checkCancelledUserSet(long userId) {
+    if (!sseEmitterMap.containsKey(userId)) {
+      return true;
+    }
+    if (sseEmitterMap.get(userId) == null) {
+      sseEmitterMap.remove(userId);
+      return true;
+    }
+    return cancelledUserSet.contains(userId);
+  }
+
+  public boolean checkConnection(long userId) {
+    return sseEmitterMap.containsKey(userId);
   }
 }

@@ -31,7 +31,7 @@ public class MatchingController {
     String message =
         matchingService.requestMatching(matchingRequestDto) ? "Matching Started" : "Banned User";
     return MatchingResponseDto.builder()
-        .message("Matching Started")
+        .message(message)
         .restaurantDto(matchingRequestDto.getPlace()).build();
   }
 

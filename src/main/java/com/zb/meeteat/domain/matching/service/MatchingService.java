@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +41,7 @@ public class MatchingService {
   private final RedisService redisService;
   private final MatchingRepository matchingRepository;
   private final int MAX_SEARCH_COUNT = 100;
-  private final Set<Long> cancelledUserSet = ConcurrentHashMap.newKeySet();//취소한 유저가 계산되고 있는 경우를 체크하기 위해
+  //  private final Set<Long> cancelledUserSet = ConcurrentHashMap.newKeySet();//취소한 유저가 계산되고 있는 경우를 체크하기 위해
   private final PriorityQueue<Integer> teamIdPq = new PriorityQueue<>();
   private final Map<String, List<MatchingRequestDto>> tempTeamMap = new ConcurrentHashMap<>();
   private final Map<String, Integer> tmpTeamAgreeCountMap = new ConcurrentHashMap<>();
@@ -84,7 +83,7 @@ public class MatchingService {
       log.info("밴된 유저");
       return false;
     }
-    cancelledUserSet.remove(userId);
+    sseService.removeCancelledUserSet(userId);
     log.info("Matching requested: " + userId);
     log.info("매칭 요청 도착: userId={}, matchingRequestDto={}", userId, matchingRequestDto);
     log.info("matchingRequestDto.place={}", matchingRequestDto.getPlace());
@@ -98,8 +97,11 @@ public class MatchingService {
   public void cancelMatching() {
     long userId = authService.getLoggedInUserId();
     log.info("매칭 취소 도착: userId={}", userId);
+    if (!sseService.checkConnection(userId)) {
+      return;
+    }
     sseService.unsubscribe(userId);
-    cancelledUserSet.add(userId);
+    sseService.addCancelledUserSet(userId);
     log.info("매칭 취소 처리 완료: userId={}", userId);
   }
 
@@ -107,6 +109,10 @@ public class MatchingService {
   public void makeTempTeam() {
     while (!redisService.isMatchingQueueEmpty()) {
       MatchingRequestDto user = redisService.leftPopMatchingQueue();
+      log.info("임시 팀 생성");
+      if (sseService.checkCancelledUserSet(user.getUserId())) {
+        continue;
+      }
       List<MatchingRequestDto> team = new LinkedList<>();
       team.add(user);
       log.info("임시 팀 생성 시작: 기준 userId={}", user.getUserId());
@@ -115,8 +121,8 @@ public class MatchingService {
           && team.size() < user.getGroupSize()) {
         MatchingRequestDto candidate = redisService.leftPopMatchingQueue();
         log.info("임시 팀 생성 중: 기준 userId={}, candidate={}", user.getUserId(), candidate.getUserId());
-        if (cancelledUserSet.contains(candidate.getUserId())) {
-          cancelledUserSet.remove(candidate.getUserId());
+        if (sseService.checkCancelledUserSet(candidate.getUserId())) {
+          sseService.removeCancelledUserSet(candidate.getUserId());
           log.info("임시 팀 생성 중: 계산 중 매칭 취소한 유저 삭제, candidate={}", candidate.getUserId());
           continue;
         }
@@ -127,21 +133,18 @@ public class MatchingService {
           redisService.rightPushMatchingQueue(candidate);
           log.info("임시 팀 생성 중: 후보군 팀에서 제외, candidate={}", candidate.getUserId());
         }
-        if (cancelledUserSet.contains(user.getUserId())) {
-          break;
-        }
       }
       if (team.size() == user.getGroupSize()) {
         log.info("임시 팀 생성 완료 후 확인: 계산 중에 취소한 인원이 있는지 확인 중");
         for (MatchingRequestDto candidate : team) {
-          if (cancelledUserSet.contains(candidate.getUserId())) {
+          if (sseService.checkCancelledUserSet(candidate.getUserId())) {
             for (MatchingRequestDto cancelled : team) {
-              if (!cancelledUserSet.contains(cancelled.getUserId())) {
+              if (!sseService.checkCancelledUserSet(candidate.getUserId())) {
                 redisService.rightPushMatchingQueue(cancelled);
               }
             }
             log.info("임시 팀 생성 완료 후 확인: 계산 중에 취소한 인원이 있어 나머지 인원 다시 매칭 큐에 넣어줌");
-            cancelledUserSet.remove(candidate.getUserId());
+            sseService.removeCancelledUserSet(candidate.getUserId());
             break;
           }
         }
@@ -158,7 +161,7 @@ public class MatchingService {
       } else {
         log.info("임시 팀 인원이 모자라서 팀 해체");
         for (MatchingRequestDto member : team) {
-          if (!cancelledUserSet.contains(member.getUserId())) {
+          if (!sseService.checkCancelledUserSet(member.getUserId())) {
             redisService.rightPushMatchingQueue(member);
           }
         }
@@ -196,24 +199,26 @@ public class MatchingService {
         if (tmpTeamResponseCountMap.get(teamName) == tempTeamMap.get(teamName).size()) {
           List<MatchingRequestDto> team = tempTeamMap.get(teamName);
           for (MatchingRequestDto member : team) {
-            if (!cancelledUserSet.contains(member.getUserId())) {
-              redisService.rightPushMatchingQueue(member);
-            }
+//            if (!sseService.checkCancelledUserSet(member.getUserId())) {
+//              redisService.rightPushMatchingQueue(member);
+//            }
+            sseService.addCancelledUserSet(member.getUserId());
           }
           log.info("생성된 임시 팀이 모두 동의하지 않아 해체됨: teamId={}", joinRequestDto.getTeamId());
           teamIdPq.add(joinRequestDto.getTeamId());
         }
       } else {
         tmpTeamResponseCountMap.put(teamName, tmpTeamResponseCountMap.get(teamName) + 1);
+        List<MatchingRequestDto> team = tempTeamMap.get(teamName);
+        sseService.notifyTempTeamJoin(team, joinRequestDto);
         log.info("생성된 임시 팀을 유저가 거절함: teamId={},userId={}", joinRequestDto.getTeamId(), userId);
         if (tmpTeamResponseCountMap.get(teamName) == tempTeamMap.get(teamName).size()) {
           teamIdPq.add(joinRequestDto.getTeamId());
-          List<MatchingRequestDto> team = tempTeamMap.get(teamName);
-          sseService.notifyTempTeamJoin(team, joinRequestDto);
           for (MatchingRequestDto member : team) {
-            if (!cancelledUserSet.contains(member.getUserId())) {
-              redisService.rightPushMatchingQueue(member);
-            }
+//            if (!sseService.checkCancelledUserSet(member.getUserId())) {
+//              redisService.rightPushMatchingQueue(member);
+//            }
+            sseService.addCancelledUserSet(member.getUserId());
           }
           log.info("생성된 임시 팀이 모두 동의하지 않아 해체됨: teamId={}", joinRequestDto.getTeamId());
           teamIdPq.add(joinRequestDto.getTeamId());
@@ -222,9 +227,10 @@ public class MatchingService {
     } else {
       List<MatchingRequestDto> team = tempTeamMap.get(teamName);
       for (MatchingRequestDto member : team) {
-        if (!cancelledUserSet.contains(member.getUserId())) {
-          redisService.rightPushMatchingQueue(member);
-        }
+//        if (!sseService.checkCancelledUserSet(member.getUserId())) {
+//          redisService.rightPushMatchingQueue(member);
+//        }
+        sseService.addCancelledUserSet(member.getUserId());
       }
       log.info("생성된 임시 팀이 시간이 지나 해체됨: teamId={}", joinRequestDto.getTeamId());
       teamIdPq.add(joinRequestDto.getTeamId());
@@ -291,13 +297,12 @@ public class MatchingService {
 
   private boolean checkCondition(MatchingRequestDto member1, MatchingRequestDto member2) {
     //TODO 테스트용으로 모두 허용
-//    if (member1.getGroupSize() != member2.getGroupSize()) {
-//      return false;
-//    } else if (banService.checkBan(member1.getUserId(), member2.getUserId())) {
-//      return false;
-//    }
-//    return checkDistanceCondition(member1, member2);
-    return true;
+    if (member1.getGroupSize() != member2.getGroupSize()) {
+      return false;
+    } else if (banService.checkBan(member1.getUserId(), member2.getUserId())) {
+      return false;
+    }
+    return checkDistanceCondition(member1, member2);
   }
 
   private boolean checkDistanceCondition(MatchingRequestDto member1, MatchingRequestDto member2) {
@@ -330,4 +335,5 @@ public class MatchingService {
     int randomIndex = random.nextInt(team.size()); // 0부터 team.size()-1 사이의 랜덤 인덱스 선택
     return team.get(randomIndex).getPlace();
   }
+
 }

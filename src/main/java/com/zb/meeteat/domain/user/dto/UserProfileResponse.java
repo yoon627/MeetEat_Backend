@@ -15,7 +15,7 @@ public class UserProfileResponse {
   private String role;
   private String signupType;
   private int matchingCount;
-  private boolean isPenalty;
+  private Boolean isPenalty;
   private LocalDateTime bannedAt;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
