@@ -52,7 +52,8 @@ public class SecurityConfig {
                 "/api/users/signin",
                 "/api/users/signout",
                 "/api/users/signin/*",
-                "api/restaurants/search")
+                "api/restaurants/search"
+            )
             .permitAll()
             .requestMatchers(HttpMethod.GET, "/api/restaurants/{restaurantId}",
                 "/api/restaurants/{restaurantId}/reviews").permitAll()
