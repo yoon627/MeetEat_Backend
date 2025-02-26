@@ -36,8 +36,11 @@ public class RestaurantResponse {
     res.setY(restaurant.getY());
     res.setRoad_address_name(restaurant.getRoadAddressName());
     res.setCategory_name(restaurant.getCategoryName());
+
     double rating = restaurant.getRating() == null ? 0 : restaurant.getRating();
+    rating = Math.round(rating * 10.0) / 10.0;
     res.setRating(rating);
+
     res.setThumbnail(thumbnail);
     return res;
   }
