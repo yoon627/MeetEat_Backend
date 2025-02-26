@@ -132,12 +132,13 @@ public class MatchingHistoryService {
     matchingHistory.setJoin(false);
     LocalDateTime localDateTime = LocalDateTime.now().minusMinutes(3L);
     boolean penaltyFlag = false;
+    //3분이 지난후 취소를 한 경우
     if (matchingHistory.getCreatedAt().isBefore(localDateTime)) {
       //TODO 패널티 제거
-//      User user = userRepository.findById(userId).orElseThrow();
-//      user.setIsPenalty(true);
-//      user.setBannedAt(LocalDateTime.now());
-//      user.setBannedEndAt(LocalDateTime.now().plusDays(7L));
+      User user = userRepository.findById(userId).orElseThrow();
+      user.setIsPenalty(true);
+      user.setBannedAt(LocalDateTime.now());
+      user.setBannedEndAt(LocalDateTime.now().plusDays(7L));
       penaltyFlag = true;
     }
     //TODO 다른 사람들도 cancelled처리 해줘야댐

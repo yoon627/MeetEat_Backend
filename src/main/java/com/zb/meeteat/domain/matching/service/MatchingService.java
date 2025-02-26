@@ -59,17 +59,6 @@ public class MatchingService {
     }
   }
 
-//  public void saveMatching(MatchingDto matchingDto) {
-//    log.info("Save matching " + matchingDto);
-//    log.info(matchingDto.toString());
-//    log.info(String.valueOf(matchingDto.getCount()));
-//    log.info(String.valueOf(matchingDto.getStatus()));
-//    log.info(matchingDto.getRestaurant().toString());
-//    log.info(matchingDto.getRestaurant().getId().toString());
-//
-//    matchingRepository.save(MatchingDto.toEntity(matchingDto));
-//  }
-
   public boolean requestMatching(MatchingRequestDto matchingRequestDto) {
     log.info("매칭 요청 신청이 서비스에 옴");
     long userId = authService.getLoggedInUserId();
@@ -240,7 +229,6 @@ public class MatchingService {
   @Transactional
   public void makeTeam(List<MatchingRequestDto> team) {
     log.info("팀 생성 완료: team={}", team);
-//    RestaurantDto restaurantDto = team.getFirst().getPlace();
     RestaurantDto restaurantDto = chooseRestaurant(team);
     log.info("팀 생성 후 선정된 식당: restaurantDto={}", restaurantDto);
     Restaurant restaurant = restaurantService.saveRestaurant(restaurantDto);
@@ -255,17 +243,10 @@ public class MatchingService {
     log.info("팀 생성 알림: team={}", team);
     sseService.notifyTeam(restaurantDto, team, matching);
     log.info("팀 생성 알림 보내기 완료: team={}", team);
-//    saveMatching(matchingDto);
-    //TODO 3분이내 이탈자 발생
   }
 
   public Matching saveTeam(MatchingDto matchingDto, List<MatchingRequestDto> team,
       Restaurant restaurant) {
-//    log.info("MatchingDto Restaurant Id:" + String.valueOf(matchingDto.getRestaurant().getId()));
-//    if (matchingDto.getRestaurant() != null && matchingDto.getRestaurant().getId() == null) {
-//      Restaurant restaurant = restaurantService.saveRestaurant(matchingDto.getRestaurant());
-//      matchingDto.getRestaurant().setId(restaurant.getId());
-//    }
     log.info("Save matching " + matchingDto);
     log.info(matchingDto.toString());
     log.info(String.valueOf(matchingDto.getCount()));

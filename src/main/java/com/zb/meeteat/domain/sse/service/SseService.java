@@ -52,10 +52,12 @@ public class SseService {
     sseEmitter.onTimeout(
         () -> {
           sendConnectionTimeOutEvent(userId);
+          cancelledUserSet.add(userId);
           sseEmitterMap.remove(userId);
         }); // TODO:타임아웃이 된 경우 다시 매칭할건지 물어봐야함
     sseEmitter.onError(
         (e) -> {
+          cancelledUserSet.add(userId);
           sseEmitterMap.remove(userId);
         }); // TODO: sseEmitter 연결에 오류가 발생할 경우 지수 백오프 방식 도입
     return sseEmitter;
@@ -197,7 +199,6 @@ public class SseService {
     log.info("team emitter: {}", emitter);
     if (emitter != null) {
       log.info("emitter: null아님 {}", emitter);
-
       try {
         log.info("연결시간 초과 알림 보내기 중: {}", emitter);
         emitter.send(SseEmitter.event().name("TimeOut").data("timeout"));
@@ -228,6 +229,7 @@ public class SseService {
           log.info("매칭 취소 알림 보내기 중: {}", emitter);
           emitter.send(SseEmitter.event().name("cancel").data(cancelledUserId));
           log.info("매칭 취소 알림 보내기 완료:{}", emitter);
+          sseEmitterMap.remove(userId);
         } catch (IOException e) {
           emitter.complete();
           sseEmitterMap.remove(userId);
@@ -235,7 +237,6 @@ public class SseService {
         }
       } else {
         log.info("emitter: null임 {}", emitter);
-
       }
     }
   }
@@ -262,7 +263,6 @@ public class SseService {
         }
       } else {
         log.info("emitter: null임 {}", emitter);
-
       }
     }
   }
@@ -294,4 +294,5 @@ public class SseService {
     long userId = authService.getLoggedInUserId();
     return sseEmitterMap.containsKey(userId) && sseEmitterMap.get(userId) != null;
   }
+
 }
