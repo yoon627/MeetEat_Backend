@@ -121,8 +121,12 @@ public class RestaurantService {
     LocalDateTime matchingTime = matching.getCreatedAt();
     LocalDateTime currentTime = LocalDateTime.now();
     Duration duration = Duration.between(matchingTime, currentTime);
-    if (duration.toHours() < AFTER_MATCHING_TIME) {
-      throw new CustomException(ErrorCode.REVIEW_TIME_NOT_EXCEEDED);
+    // todo 테스트 기간동안만 2분뒤에 작성할 수 있도록 수정 => 이후에는 다시 1시간으로 변경
+//    if (duration.toHours() < AFTER_MATCHING_TIME) {
+//      throw new CustomException(ErrorCode.REVIEW_TIME_NOT_EXCEEDED);
+//    }
+    if (duration.toMinutes() < 2) {
+      throw new CustomException(ErrorCode.REVIEW_WRITING_DELAY_AFTER_TWO_MINUTES);
     }
 
     // 4. 첨부파일 확인
