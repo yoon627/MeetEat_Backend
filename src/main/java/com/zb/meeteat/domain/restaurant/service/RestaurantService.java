@@ -173,7 +173,7 @@ public class RestaurantService {
         .id(myReview.getId())
         .rating(myReview.getRating())
         .description(myReview.getDescription())
-        .imageUrl(myReview.getImgUrl())
+        .imgUrl(myReview.getImgUrl())
         .nickName(myReview.getUser().getNickname())
         .createdAt(myReview.getCreatedAt())
         .build();
@@ -197,10 +197,13 @@ public class RestaurantService {
 
   private void updateRestaurantRating(Restaurant restaurant) {
     List<RestaurantReview> reviews = restaurantReviewRepository.findAllByRestaurant(restaurant);
-    Double avgRating = reviews.stream()
+    double avgRating = reviews.stream()
         .mapToInt(RestaurantReview::getRating)
         .average()
         .orElse(0.0);
+
+    // 소수점 한 자리까지 반올림
+    avgRating = Math.round(avgRating * 10.0) / 10.0;
 
     restaurant.setRating(avgRating);
     restaurantRepository.save(restaurant);
