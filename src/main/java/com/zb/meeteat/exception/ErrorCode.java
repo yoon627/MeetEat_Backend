@@ -40,6 +40,10 @@ public enum ErrorCode {
   USER_LOCATION_NOT_PROVIDED(HttpStatus.BAD_REQUEST, "USER_LOCATION_NOT_PROVIDED",
       "거리순 정렬에 사용할 사용자의 위치값이 누락되었습니다."),
 
+  // 테스트
+  REVIEW_WRITING_DELAY_AFTER_TWO_MINUTES(HttpStatus.BAD_REQUEST, "REVIEW_WRITING_DELAY_AFTER_TWO_MINUTES",
+      "후기 작성시간은 매칭 약속 시간 이후 2분 뒤부터 작성가능합니다."),
+
   // 기본
   INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR",
       "서버에 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
