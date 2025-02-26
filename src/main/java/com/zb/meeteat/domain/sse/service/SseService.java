@@ -9,6 +9,8 @@ import com.zb.meeteat.domain.matching.dto.TempTeamResponseDto;
 import com.zb.meeteat.domain.matching.dto.UserJoinDto;
 import com.zb.meeteat.domain.matching.dto.UserMatchingHistoryDto;
 import com.zb.meeteat.domain.matching.entity.Matching;
+import com.zb.meeteat.domain.matching.entity.MatchingHistory;
+import com.zb.meeteat.domain.matching.repository.MatchingHistoryRepository;
 import com.zb.meeteat.domain.restaurant.dto.RestaurantDto;
 import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
@@ -33,6 +35,7 @@ public class SseService {
   private final Map<Long, SseEmitter> sseEmitterMap = new ConcurrentHashMap<>();
   private final UserRepository userRepository;
   private final Set<Long> cancelledUserSet = ConcurrentHashMap.newKeySet();//취소한 유저가 계산되고 있는 경우를 체크하기 위해
+  private final MatchingHistoryRepository matchingHistoryRepository;
 
 
   public SseEmitter subscribe() {
@@ -59,8 +62,6 @@ public class SseService {
   }
 
   public void unsubscribe(Long userId) {
-    SseEmitter sseEmitter = sseEmitterMap.get(userId);
-    sseEmitter.complete();
     sseEmitterMap.remove(userId);
   }
 
@@ -173,7 +174,9 @@ public class SseService {
     log.info("team emitter: {}", emitter);
     if (emitter != null) {
       log.info("emitter: null아님 {}", emitter);
-
+      MatchingHistory matchingHistory = matchingHistoryRepository.findByMatchingIdAndUserId(
+          teamResponseDto.getMatching().getId(), userId);
+      teamResponseDto.setMatchingHistoryId(matchingHistory.getId());
       try {
         log.info("팀 생성 완료 알림 보내기 중: {}", emitter);
         emitter.send(SseEmitter.event().name("Team").data(teamResponseDto));
@@ -284,6 +287,11 @@ public class SseService {
   }
 
   public boolean checkConnection(long userId) {
-    return sseEmitterMap.containsKey(userId);
+    return sseEmitterMap.containsKey(userId) && sseEmitterMap.get(userId) != null;
+  }
+
+  public boolean selfCheckConnection() {
+    long userId = authService.getLoggedInUserId();
+    return sseEmitterMap.containsKey(userId) && sseEmitterMap.get(userId) != null;
   }
 }

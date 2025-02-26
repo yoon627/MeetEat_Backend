@@ -19,4 +19,8 @@ public class SseController {
     return sseService.subscribe();
   }
 
+  @GetMapping("/connection-check")
+  public boolean checkConnection() {
+    return sseService.selfCheckConnection();
+  }
 }

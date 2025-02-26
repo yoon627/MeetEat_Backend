@@ -60,7 +60,7 @@ public class RestaurantController {
         restaurantService.getRestaurantReviews(restaurantId, page, size));
   }
 
-  @PostMapping(value = "/review")
+  @PostMapping("/review")
   public ResponseEntity createReview(
       @RequestHeader("Authorization") String token,
       @Valid @ModelAttribute CreateReviewRequest review) throws CustomException {

@@ -39,7 +39,7 @@ public class ReportService {
   @Transactional
   public void deleteReport(long reportedId, long matchingId) {
     Long userId = authService.getLoggedInUserId();
-    reportRepository.deleteByReportedIdAndReportedIdAndMatchingId(userId, reportedId, matchingId);
+    reportRepository.deleteByReporterIdAndReportedIdAndMatchingId(userId, reportedId, matchingId);
   }
 
   public boolean checkReport(long reportedId, long matchingId) {

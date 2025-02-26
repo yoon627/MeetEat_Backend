@@ -17,5 +17,6 @@ public class TeamResponseDto {
 
   private String message;
   private MatchingDto matching;
+  private Long matchingHistoryId;
 
 }
