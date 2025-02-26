@@ -14,7 +14,7 @@ public class RestaurantMyReviewResponse {
   private Long id;
   private Integer rating;
   private String description;
-  private String imageUrl;
+  private String imgUrl;
   private String nickName;
   private LocalDateTime createdAt;
 }
