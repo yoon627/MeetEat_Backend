@@ -14,6 +14,7 @@ import com.zb.meeteat.domain.restaurant.entity.Restaurant;
 import com.zb.meeteat.domain.restaurant.entity.RestaurantReview;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantRepository;
 import com.zb.meeteat.domain.restaurant.repository.RestaurantReviewRepository;
+import com.zb.meeteat.domain.sse.service.SseService;
 import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
 import com.zb.meeteat.exception.CustomException;
@@ -45,6 +46,7 @@ public class RestaurantService {
   private final RestaurantReviewRepository restaurantReviewRepository;
   private final UserRepository userRepository;
   private final MatchingHistoryRepository matchingHistoryRepository;
+  private final SseService sseService;
 
   public Restaurant saveRestaurant(RestaurantDto restaurantDto) {
     Restaurant restaurant = restaurantRepository.findByPlaceNameAndRoadAddressName(
@@ -146,6 +148,8 @@ public class RestaurantService {
 
     // 6. 식당 평점 변경
     updateRestaurantRating(matching.getRestaurant());
+
+    sseService.unsubscribe(userId);
   }
 
   public RestaurantMyReviewResponse getMyReviewByMatching(Long matchingHistoryId, Long userId) {
@@ -173,7 +177,7 @@ public class RestaurantService {
         .id(myReview.getId())
         .rating(myReview.getRating())
         .description(myReview.getDescription())
-        .imageUrl(myReview.getImgUrl())
+        .imgUrl(myReview.getImgUrl())
         .nickName(myReview.getUser().getNickname())
         .createdAt(myReview.getCreatedAt())
         .build();
@@ -181,7 +185,8 @@ public class RestaurantService {
 
   private String saveImage(List<MultipartFile> files) {
     if (files == null || files.isEmpty() || files.size() > MAX_FILE_COUNT
-        || files.getFirst().isEmpty() || Objects.requireNonNull(files.getFirst().getOriginalFilename()).isEmpty()) {
+        || files.getFirst().isEmpty() || Objects.requireNonNull(
+        files.getFirst().getOriginalFilename()).isEmpty()) {
       return null;
     }
 

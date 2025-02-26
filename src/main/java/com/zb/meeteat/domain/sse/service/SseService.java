@@ -40,7 +40,7 @@ public class SseService {
 
   public SseEmitter subscribe() {
     long userId = authService.getLoggedInUserId();
-    SseEmitter sseEmitter = new SseEmitter(600_000L); // connectionTimeOut 10분
+    SseEmitter sseEmitter = new SseEmitter(4_200_000L); // connectionTimeOut 70분
     try {
       sseEmitter.send(SseEmitter.event().name("match").data("SSE Connected"));
     } catch (IOException e) {
