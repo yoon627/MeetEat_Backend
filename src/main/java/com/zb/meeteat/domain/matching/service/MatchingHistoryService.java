@@ -127,6 +127,8 @@ public class MatchingHistoryService {
 
   public void cancelMatchingHistory(long matchingId) {
     Long userId = authService.getLoggedInUserId();
+    sseService.unsubscribe(userId);
+    sseService.addCancelledUserSet(userId);
     MatchingHistory matchingHistory = matchingHistoryRepository.findByMatchingIdAndUserId(
         matchingId, userId);
     matchingHistory.setJoin(false);

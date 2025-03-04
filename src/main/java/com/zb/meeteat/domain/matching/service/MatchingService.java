@@ -191,6 +191,7 @@ public class MatchingService {
 //            if (!sseService.checkCancelledUserSet(member.getUserId())) {
 //              redisService.rightPushMatchingQueue(member);
 //            }
+            sseService.unsubscribe(member.getUserId());
             sseService.addCancelledUserSet(member.getUserId());
           }
           log.info("생성된 임시 팀이 모두 동의하지 않아 해체됨: teamId={}", joinRequestDto.getTeamId());
@@ -201,17 +202,18 @@ public class MatchingService {
         List<MatchingRequestDto> team = tempTeamMap.get(teamName);
         sseService.notifyTempTeamJoin(team, joinRequestDto);
         log.info("생성된 임시 팀을 유저가 거절함: teamId={},userId={}", joinRequestDto.getTeamId(), userId);
-        if (tmpTeamResponseCountMap.get(teamName) == tempTeamMap.get(teamName).size()) {
-          teamIdPq.add(joinRequestDto.getTeamId());
-          for (MatchingRequestDto member : team) {
+//        if (tmpTeamResponseCountMap.get(teamName) == tempTeamMap.get(teamName).size()) {
+        teamIdPq.add(joinRequestDto.getTeamId());
+        for (MatchingRequestDto member : team) {
 //            if (!sseService.checkCancelledUserSet(member.getUserId())) {
 //              redisService.rightPushMatchingQueue(member);
 //            }
-            sseService.addCancelledUserSet(member.getUserId());
-          }
-          log.info("생성된 임시 팀이 모두 동의하지 않아 해체됨: teamId={}", joinRequestDto.getTeamId());
-          teamIdPq.add(joinRequestDto.getTeamId());
+          sseService.unsubscribe(member.getUserId());
+          sseService.addCancelledUserSet(member.getUserId());
         }
+        log.info("생성된 임시 팀이 모두 동의하지 않아 해체됨: teamId={}", joinRequestDto.getTeamId());
+        teamIdPq.add(joinRequestDto.getTeamId());
+//        }
       }
     } else {
       List<MatchingRequestDto> team = tempTeamMap.get(teamName);
@@ -219,6 +221,7 @@ public class MatchingService {
 //        if (!sseService.checkCancelledUserSet(member.getUserId())) {
 //          redisService.rightPushMatchingQueue(member);
 //        }
+        sseService.unsubscribe(member.getUserId());
         sseService.addCancelledUserSet(member.getUserId());
       }
       log.info("생성된 임시 팀이 시간이 지나 해체됨: teamId={}", joinRequestDto.getTeamId());
