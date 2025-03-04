@@ -7,6 +7,8 @@ import com.zb.meeteat.domain.report.repository.ReportRepository;
 import com.zb.meeteat.domain.user.entity.User;
 import com.zb.meeteat.domain.user.repository.UserRepository;
 import com.zb.meeteat.domain.user.service.AuthService;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,15 @@ public class ReportService {
         .matching(matching)
         .build();
     reportRepository.save(report);
+    List<Report> reports = reportRepository.findByReportedIdAndMatchingId(reportedId, matchingId);
+    if (matching.getCount() > 2 && reports.size() > matching.getCount() / 2) {
+      User reportedUser = userRepository.findById(reportedId)
+          .orElseThrow(() -> new RuntimeException("User not found"));
+      reportedUser.setIsPenalty(true);
+      reportedUser.setBannedAt(LocalDateTime.now());
+      reportedUser.setBannedEndAt(LocalDateTime.now().plusDays(7L));
+      userRepository.save(reportedUser);
+    }
   }
 
   @Transactional
